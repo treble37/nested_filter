@@ -10,7 +10,7 @@ by adding `nested_filter` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:nested_filter, "~> 0.1.0"}]
+  [{:nested_filter, "~> 0.1.1"}]
 end
 ```
 
@@ -21,11 +21,22 @@ be found at [https://hexdocs.pm/nested_filter](https://hexdocs.pm/nested_filter)
 
 ## Usage
 
+By default, when removing user specified values, empty values will be preserved
+(see Case 1 below). You can use the *remove_empty* option which takes a list of
+user specified "empty values" (e.g., empty maps) that will be removed.
+
 ```elixir
-# here we remove the nil values from a nested map
+# Case 1: Remove the nil values from a nested map, preserving empty map values
 
 nested_map = %{a: 1, b: %{m: nil, n: 2}, c: %{p: %{q: nil, r: nil}, s: %{t: 2, u: 3}} }
 NestedFilter.reject_keys_by_value(nested_map, [nil])
 
 # => %{a: 1, b: %{n: 2}, c: %{p: %{}, s: %{t: 2, u: 3}} }
+
+# Case 2: Remove the nil values from a nested map, removing empty map values
+nested_map = %{a: 1, b: %{m: nil, n: 2}, c: %{p: %{q: nil, r: nil}, s: %{t: 2, u: 3}} }
+NestedFilter.reject_keys_by_value(nested_map, [nil], %{remove_empty: [%{}]})
+# => %{a: 1, b: %{n: 2}, c: %{s: %{t: 2, u: 3}} }
 ```
+
+You can browse the tests for more examples.
