@@ -22,7 +22,7 @@ be found at [https://hexdocs.pm/nested_filter](https://hexdocs.pm/nested_filter)
 ## Usage
 
 ```elixir
-# here we remove the nils from a nested map
+# here we remove the nil values from a nested map
 
 nested_map = %{a: 1, b: %{m: nil, n: 2}, c: %{p: %{q: nil, r: nil}, s: %{t: 2, u: 3}} }
 NestedFilter.reject_keys_by_value(nested_map, [nil])
