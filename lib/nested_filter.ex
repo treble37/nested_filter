@@ -11,7 +11,7 @@ defmodule NestedFilter do
   def reject_keys_by_value(map, filter_values) do
     cond do
       is_nested_map?(map) ->
-        filtered_map = Map.drop(map, filterable_keys(map, filter_values))
+        Map.drop(map, filterable_keys(map, filter_values))
         |> Enum.reduce(%{}, fn({key, val}, acc) -> Map.put(acc, key, reject_keys_by_value(val, filter_values)) end)
       is_map(map) ->
         Map.drop(map, filterable_keys(map, filter_values))
@@ -21,16 +21,16 @@ defmodule NestedFilter do
   end
 
   defp filterable_keys(map, filter_values) do
-    keys = map
-           |> Map.keys
-           |> Enum.filter(fn(key) -> Enum.member?(filter_values, map[key]) end)
+    map
+    |> Map.keys
+    |> Enum.filter(fn(key) -> Enum.member?(filter_values, map[key]) end)
   end
 
   defp is_nested_map?(map) do
     cond do
       is_map(map) ->
         map
-        |> Enum.any?(fn{key, value} -> is_map(map[key]) end)
+        |> Enum.any?(fn{key, _} -> is_map(map[key]) end)
       true ->
         false
     end
