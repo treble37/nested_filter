@@ -26,7 +26,7 @@ defmodule NestedFilter do
   Take a (nested) map and filter out any values with specified keys in the
   filter_keys list.
   """
-  @spec reject_keys_by_value(map :: map(), filter_keys :: list()) :: map()
+  @spec reject_values_by_key(map :: map(), filter_keys :: list()) :: map()
   def reject_values_by_key(map, filter_keys) do
     cond do
       is_nested_map?(map) ->
