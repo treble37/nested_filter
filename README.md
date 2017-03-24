@@ -22,8 +22,8 @@ be found at [https://hexdocs.pm/nested_filter](https://hexdocs.pm/nested_filter)
 ## Usage
 
 By default, when removing user specified values, empty values will be preserved
-(see Case 1 below). You can use the *remove_empty* option which takes a list of
-user specified "empty values" (e.g., empty maps) that will be removed.
+(see Case 1 below). You can add empty values to the user specified values list
+if you wish those "empty values" (e.g., empty maps) to be removed.
 
 ```elixir
 # Case 1: Remove the nil values from a nested map, preserving empty map values
@@ -35,8 +35,8 @@ NestedFilter.reject_keys_by_value(nested_map, [nil])
 
 # Case 2: Remove the nil values from a nested map, removing empty map values
 nested_map = %{a: 1, b: %{m: nil, n: 2}, c: %{p: %{q: nil, r: nil}, s: %{t: 2, u: 3}} }
-NestedFilter.reject_keys_by_value(nested_map, [nil], %{remove_empty: [%{}]})
+NestedFilter.reject_keys_by_value(nested_map, [nil, %{}])
 # => %{a: 1, b: %{n: 2}, c: %{s: %{t: 2, u: 3}} }
 ```
 
-You can browse the tests for more examples.
+You can browse the tests for more usage examples.

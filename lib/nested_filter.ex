@@ -8,16 +8,16 @@ defmodule NestedFilter do
   filter_values list. Specify a list of empty values in options[:remove_empty]
   that should be removed after filtering out specified values.
   """
-  @spec reject_keys_by_value(map :: map(), filter_values :: list(), options :: map()) :: map()
-  def reject_keys_by_value(map, filter_values, options \\ nil) do
+  @spec reject_keys_by_value(map :: map(), filter_values :: list()) :: map()
+  def reject_keys_by_value(map, filter_values) do
     cond do
       is_nested_map?(map) ->
-        new_map = Map.drop(map, filterable_keys(map, filter_values))
-        |> Enum.reduce(%{}, fn({key, val}, acc) -> Map.put(acc, key, reject_keys_by_value(val, filter_values, options)) end)
-        Map.drop(new_map, filterable_keys(new_map, options[:remove_empty]))
+        new_map = map
+                  |> Enum.reduce(%{}, fn({key, val}, acc) ->
+                     Map.put(acc, key, reject_keys_by_value(val, filter_values)) end)
+        Map.drop(new_map, filterable_keys(new_map, filter_values))
       is_map(map) ->
-        new_map = Map.drop(map, filterable_keys(map, filter_values))
-        Map.drop(new_map, filterable_keys(new_map, options[:remove_empty]))
+        Map.drop(map, filterable_keys(map, filter_values))
       true ->
         map
     end
