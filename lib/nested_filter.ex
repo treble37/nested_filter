@@ -5,8 +5,7 @@ defmodule NestedFilter do
 
   @doc """
   Take a (nested) map and filter out any keys with specified values in the
-  filter_values list. Specify a list of empty values in options[:remove_empty]
-  that should be removed after filtering out specified values.
+  filter_values list.
   """
   @spec reject_keys_by_value(map :: map(), filter_values :: list()) :: map()
   def reject_keys_by_value(map, filter_values) do
