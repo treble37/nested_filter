@@ -1,5 +1,7 @@
 # NestedFilter
 
+[![Build Status](https://travis-ci.org/treble37/nested_filter.svg?branch=master)](https://travis-ci.org/treble37/nested_filter)
+
 ## The Problem
 
 You have a nested map (or a struct that you converted to a nested map) and you want to remove ALL the keys with specific values such as nil.
