@@ -6,6 +6,10 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 0.1.4 - 3/24/17 Fri
+
+* [ENHANCEMENT] Update to allow compatibility with Elixir >= 1.3.0
+
 ## 0.1.3 - 3/23/17 Thurs
 
 * [ENHANCEMENT] Add a NestedFilter#reject_values_by_key to allow the
