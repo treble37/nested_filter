@@ -4,7 +4,7 @@ defmodule NestedFilter.Mixfile do
   def project do
     [app: :nested_filter,
      version: "0.1.3",
-     elixir: "~> 1.4",
+     elixir: ">= 1.3.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      description: description(),
