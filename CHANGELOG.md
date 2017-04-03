@@ -9,6 +9,7 @@ For more information about changelogs, check
 ## 0.1.4 - 3/24/17 Fri
 
 * [ENHANCEMENT] Update to allow compatibility with Elixir >= 1.3.0
+* [ENHANCEMENT] Change method names to drop_by_value and drop_by_key for more clarity
 
 ## 0.1.3 - 3/23/17 Thurs
 
