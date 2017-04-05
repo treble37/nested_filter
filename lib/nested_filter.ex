@@ -5,57 +5,45 @@ defmodule NestedFilter do
 
   @doc """
   Take a (nested) map and filter out any keys with specified values in the
-  filter_values list.
+  values_to_reject list.
   """
-  @spec drop_by_value(map :: map(), filter_values :: list()) :: map()
-  def drop_by_value(map, filter_values) do
-    cond do
-      is_nested_map?(map) ->
-        new_map = map
-                  |> Enum.reduce(%{}, fn({key, val}, acc) ->
-                     Map.put(acc, key, drop_by_value(val, filter_values)) end)
-        Map.drop(new_map, filterable_keys(new_map, filter_values))
-      is_map(map) ->
-        Map.drop(map, filterable_keys(map, filter_values))
-      true ->
-        map
-    end
+  @spec drop_by_value(map :: map(), values_to_reject :: list()) :: map()
+  def drop_by_value(map, values_to_reject) when is_map(map) do
+    map
+    |> Enum.reduce(%{}, fn
+      ({key, val}, acc) ->
+        cleaned_val = drop_by_value(val, values_to_reject)
+        if cleaned_val in values_to_reject do
+          acc
+        else
+          Map.put(acc, key, cleaned_val)
+        end
+    end)
+  end
+
+  def drop_by_value(not_map, _) do
+    not_map
   end
 
   @doc """
   Take a (nested) map and filter out any values with specified keys in the
-  filter_keys list.
+  keys_to_reject list.
   """
-  @spec drop_by_key(map :: map(), filter_keys :: list()) :: map()
-  def drop_by_key(map, filter_keys) do
-    cond do
-      is_nested_map?(map) ->
-        new_map = map
-                  |> Enum.reduce(%{}, fn({key, val}, acc) ->
-                     Map.put(acc, key, drop_by_key(val, filter_keys)) end)
-        Map.drop(new_map, filter_keys)
-      is_map(map) ->
-        Map.drop(map, filter_keys)
-      true ->
-        map
-    end
-  end
-
-  defp filterable_keys(map, filter_values) when is_list(filter_values) do
+  @spec drop_by_key(map :: map(), keys_to_reject :: list()) :: map()
+  def drop_by_key(map, keys_to_reject) when is_map(map) do
     map
-    |> Map.keys
-    |> Enum.filter(fn(key) -> Enum.member?(filter_values, map[key]) end)
+    |> Enum.reduce(%{},
+    fn
+      ({key, val}, acc)  ->
+        if key in keys_to_reject do
+          acc
+        else
+          Map.put(acc, key, drop_by_key(val, keys_to_reject))
+        end
+    end)
   end
 
-  defp filterable_keys(map, filter_values), do: map
-
-  defp is_nested_map?(map) do
-    cond do
-      is_map(map) ->
-        map
-        |> Enum.any?(fn{key, _} -> is_map(map[key]) end)
-      true ->
-        false
-    end
+  def drop_by_key(not_map, _) do
+    not_map
   end
 end
