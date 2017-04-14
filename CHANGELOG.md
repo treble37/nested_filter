@@ -6,6 +6,10 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 0.1.5 - 4/13/17 Thurs
+
+* [ENHANCEMENT] Update to use more idiomatic Elixir code. Thank you [scohen](https://github.com/scohen).
+
 ## 0.1.4 - 3/24/17 Fri
 
 * [ENHANCEMENT] Update to allow compatibility with Elixir >= 1.2.0
