@@ -7,6 +7,7 @@ defmodule NestedFilter.Mixfile do
      elixir: ">= 1.2.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     test_coverage: [tool: ExCoveralls],
      description: description(),
      package: package(),
      deps: deps()]
@@ -46,6 +47,8 @@ defmodule NestedFilter.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:ex_doc, ">= 0.0.0", only: :dev}]
+    [{:ex_doc, ">= 0.0.0", only: :dev},
+     {:excoveralls, "~> 0.7", only: :test}
+    ]
   end
 end
