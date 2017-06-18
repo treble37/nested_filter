@@ -1,6 +1,9 @@
 # NestedFilter
 
 [![Build Status](https://travis-ci.org/treble37/nested_filter.svg?branch=master)](https://travis-ci.org/treble37/nested_filter)
+[![Hex.pm](https://img.shields.io/hexpm/v/nested_filter.svg?maxAge=2592000)](https://hex.pm/packages/nested_filter)
+[![Hex.pm Downloads](https://img.shields.io/hexpm/dt/nested_filter.svg?maxAge=2592000)](https://hex.pm/packages/nested_filter)
+[![Deps Status](https://beta.hexfaktor.org/badge/all/github/treble37/nested_filter.svg)](https://beta.hexfaktor.org/github/treble37/nested_filter)
 
 ## The Problem
 
