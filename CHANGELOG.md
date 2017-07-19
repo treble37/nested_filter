@@ -6,6 +6,10 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 1.0.1 - 7/19/17 Weds
+
+* [BUGFIX] Filter out values even if DateTime values exist in a nested map
+
 ## 1.0.0 - 7/18/17 Tues
 
 * [BREAKING CHANGE] - Drop support for Elixir 1.2.0. This is done in order to be

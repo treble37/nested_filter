@@ -6,6 +6,9 @@ defmodule NestedFilter do
   @type val :: any
   @type predicate :: ((key, val) -> boolean)
 
+  @spec drop_by(struct, predicate) :: struct
+  def drop_by(%_{} = struct, _), do: struct
+
   @spec drop_by(any, predicate) :: any
   def drop_by(map, predicate) when is_map(map) do
     map
