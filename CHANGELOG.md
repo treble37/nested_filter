@@ -6,6 +6,11 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 1.0.0 - 7/18/17 Tues
+
+* [BREAKING CHANGE] - Drop support for Elixir 1.2.0. This is done in order to be
+able to easily pattern match on DateTime structs.
+
 ## 0.1.5 - 4/13/17 Thurs
 
 * [ENHANCEMENT] Update to use more idiomatic Elixir code. Thank you [scohen](https://github.com/scohen).
