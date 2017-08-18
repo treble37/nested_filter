@@ -37,6 +37,12 @@ defmodule NestedFilterTest do
       minute: 50, month: 1, second: 7, std_offset: 0, time_zone: "Etc/UTC",
       utc_offset: 0, year: 2015, zone_abbr: "UTC"}
     nested_map = %{a: 1, b: %{a: 2, b: 3}, date: datetime, foo: nil}
-    assert NestedFilter.drop_by_value(nested_map, [nil]) == %{a: 1, b: %{a: 2, b: 3}, date: datetime}
+    assert NestedFilter.drop_by_value(nested_map, [nil, datetime]) == %{a: 1, b: %{a: 2, b: 3}}
+  end
+
+  test "can filter out values from a nested map with tuples as values" do
+    tuple = {:ok, %{"k" => 2, "j" => 3}, 2}
+    nested_map = %{a: 1, b: %{a: 2, b: 3}, tuple: tuple, foo: nil}
+    assert NestedFilter.drop_by_value(nested_map, [nil]) == %{a: 1, b: %{a: 2, b: 3}, tuple: tuple}
   end
 end
