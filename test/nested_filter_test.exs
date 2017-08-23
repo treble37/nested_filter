@@ -45,4 +45,10 @@ defmodule NestedFilterTest do
     nested_map = %{a: 1, b: %{a: 2, b: 3}, tuple: tuple, foo: nil}
     assert NestedFilter.drop_by_value(nested_map, [nil]) == %{a: 1, b: %{a: 2, b: 3}, tuple: tuple}
   end
+
+  test "can filter out lists of maps" do
+    list = [%{a: 1, b: 2}, %{a: 1, b: 2}]
+    nested_map = %{list: list}
+    assert NestedFilter.drop_by_key(nested_map, [:b]) == %{list: [%{a: 1}, %{a: 1}]}
+  end
 end
