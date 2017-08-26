@@ -6,6 +6,10 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 1.1.1 - 8/25/17 Fri
+
+* [ENHANCEMENT] Filter out lists of maps
+
 ## 1.0.1 - 7/19/17 Weds
 
 * [BUGFIX] Filter out values even if DateTime values exist in a nested map

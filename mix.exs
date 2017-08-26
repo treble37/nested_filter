@@ -3,7 +3,7 @@ defmodule NestedFilter.Mixfile do
 
   def project do
     [app: :nested_filter,
-     version: "1.0.1",
+     version: "1.1.1",
      elixir: ">= 1.3.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -49,7 +49,8 @@ defmodule NestedFilter.Mixfile do
   defp deps do
     [{:ex_doc, ">= 0.0.0", only: :dev},
      {:excoveralls, "~> 0.7", only: :test},
-     {:inch_ex, only: :docs}
+     {:inch_ex, only: :docs},
+     {:credo, "~> 0.7", only: [:dev, :test]}
     ]
   end
 end
