@@ -9,7 +9,7 @@ defmodule NestedFilter do
   @spec drop_by(struct, predicate) :: struct
   def drop_by(%_{} = struct, _), do: struct
 
-  @spec drop_by(any, predicate) :: any
+  @spec drop_by(map, predicate) :: map
   def drop_by(map, predicate) when is_map(map) do
     map
     |> Enum.reduce(%{},
@@ -21,6 +21,11 @@ defmodule NestedFilter do
         Map.put(acc, key, cleaned_val)
       end
     end)
+  end
+
+  @spec drop_by(list, predicate) :: list
+  def drop_by(list, predicate) when is_list(list) do
+    Enum.map(list, &drop_by(&1, predicate))
   end
 
   def drop_by(elem, _) do
