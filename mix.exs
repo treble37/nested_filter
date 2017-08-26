@@ -49,7 +49,8 @@ defmodule NestedFilter.Mixfile do
   defp deps do
     [{:ex_doc, ">= 0.0.0", only: :dev},
      {:excoveralls, "~> 0.7", only: :test},
-     {:inch_ex, only: :docs}
+     {:inch_ex, only: :docs},
+     {:credo, "~> 0.7", only: [:dev, :test]}
     ]
   end
 end
