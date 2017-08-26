@@ -1,6 +1,7 @@
 # NestedFilter
 
 [![Build Status](https://travis-ci.org/treble37/nested_filter.svg?branch=master)](https://travis-ci.org/treble37/nested_filter)
+[![Code Climate](https://codeclimate.com/github/treble37/rsocialize/badges/gpa.svg)](https://codeclimate.com/github/treble37/nested_filter)
 [![Coverage Status](https://coveralls.io/repos/github/treble37/nested_filter/badge.svg?branch=master)](https://coveralls.io/github/treble37/nested_filter?branch=master)
 [![Hex.pm](https://img.shields.io/hexpm/v/nested_filter.svg)](https://hex.pm/packages/nested_filter)
 [![Hex.pm Downloads](https://img.shields.io/hexpm/dt/nested_filter.svg)](https://hex.pm/packages/nested_filter)
