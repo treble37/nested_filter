@@ -10,9 +10,10 @@
 [![GitHub stars](https://img.shields.io/github/stars/treble37/nested_filter.svg)](https://github.com/treble37/nested_filter/stargazers)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/treble37/nested_filter/master/LICENSE)
 
-## The Problem
+## The Problems
 
-You have a nested map (or a struct that you converted to a nested map) and you want to remove ALL the keys with specific values such as nil.
+1. You have a nested map (or a struct that you converted to a nested map) and you want to remove ALL the keys with specific values such as nil.
+2. You want to do a Map#take on a nested map
 
 ##### Example: Remove all the map keys with nil values
 
@@ -79,6 +80,15 @@ NestedFilter.drop_by_value(nested_map, [nil, %{}])
 
 nested_map = %{a: 1, b: %{a: 2, b: 3}, c: %{a: %{a: 1, b: 2}, b: 2, c: %{d: 1, e: 2}}}
 assert NestedFilter.drop_by_key(nested_map, [:a]) == %{b: %{b: 3},c: %{b: 2, c: %{d: 1, e: 2}}}
+```
+
+### NestedFilter.take_by_key
+
+```elixir
+# Case 1: Take values from a nested map by key
+
+nested_map = %{a: %{b: 1}, c: 3, e: %{f: 4}}
+assert NestedFilter.take_by_key(nested_map, [:b, :f]) == %{b: 1, f: 4 }
 ```
 
 You can browse the tests for more usage examples.
