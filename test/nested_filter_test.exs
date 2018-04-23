@@ -68,4 +68,11 @@ defmodule NestedFilterTest do
     assert NestedFilter.take_by_key(nested_map, [:b, :f]) ==
       %{b: 1, f: 4 }
   end
+
+  test "take a nested map in a list" do
+    list = [%{a: %{b: 2}, c: 3, e: %{f: 4}, b: 1}, %{c: %{d: %{b: 3}}, e: %{f: 5}}]
+    nested_map = %{list: list}
+    assert NestedFilter.take_by_key(nested_map, [:b, :f]) ==
+      %{list: [%{b: 1, f: 4}, %{b: 3, f: 5}]}
+  end
 end

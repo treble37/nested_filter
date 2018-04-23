@@ -56,10 +56,18 @@ defmodule NestedFilter do
     map
     |> Enum.reduce(%{},
     fn ({key, val}, acc) ->
-      Map.merge(acc, take_by(val, keys_to_select))
+      case is_list(val) do
+        true -> Map.merge(acc, %{key => take_by(val, keys_to_select)})
+        false -> Map.merge(acc, take_by(val, keys_to_select))
+      end
     end)
     |>
     Map.merge(Map.take(map, keys_to_select))
+  end
+
+  @spec take_by(list, keys_to_select) :: list
+  def take_by(list, keys_to_select) when is_list(list) do
+    Enum.map(list, &take_by(&1, keys_to_select))
   end
 
   def take_by(_elem, _) do
