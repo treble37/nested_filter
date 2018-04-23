@@ -51,4 +51,21 @@ defmodule NestedFilterTest do
     nested_map = %{list: list}
     assert NestedFilter.drop_by_key(nested_map, [:b]) == %{list: [%{a: 1}, %{a: 1}]}
   end
+
+  test "take a nested map's values by key (distinct nested keys)" do
+    nested_map = %{a: %{b: 2}, c: %{d: 3, e: %{f: 4, g: %{h: %{1 => 2}}}}}
+    assert NestedFilter.take_by_key(nested_map, [:b, :f, :h]) ==
+      %{b: 2, f: 4, h: %{1 => 2}}
+  end
+
+  test "take a nested map's values by key and merges map values of duplicate keys" do
+    nested_map = %{a: 1, b: %{a: 2, b: 3}, c: %{a: %{a: 1, b: 2}, b: 2, c: %{d: 1, e: 2}}}
+    assert NestedFilter.take_by_key(nested_map, [:b, :c]) == %{b: %{b: 3, a: 2}, c: %{b: 2, c: %{d: 1, e: 2}, a: %{a: 1, b: 2}}}
+  end
+
+  test "take a nested map's values by key (duplicate keys) and overwrite non-map duplicate values" do
+    nested_map = %{a: %{b: 2}, c: 3, e: %{f: 4}, b: 1}
+    assert NestedFilter.take_by_key(nested_map, [:b, :f]) ==
+      %{b: 1, f: 4 }
+  end
 end
