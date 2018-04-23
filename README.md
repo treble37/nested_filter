@@ -41,7 +41,7 @@ by adding `nested_filter` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:nested_filter, "~> 1.1.1"}]
+  [{:nested_filter, "~> 1.3.1"}]
 end
 ```
 

@@ -6,6 +6,10 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 1.3.1 - 4/22/18 Sun
+
+* [ENHANCEMENT] Allow take_by_key to operate on a list of nested maps
+
 ## 1.2.1 - 4/22/18 Sun
 
 * [ENHANCEMENT] Add a take_by_key function which returns a map based on user
