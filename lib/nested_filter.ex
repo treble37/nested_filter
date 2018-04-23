@@ -4,6 +4,7 @@ defmodule NestedFilter do
   """
   @type key :: any
   @type val :: any
+  @type keys_to_select :: list
   @type predicate :: ((key, val) -> boolean)
 
   @spec drop_by(struct, predicate) :: struct
@@ -48,5 +49,31 @@ defmodule NestedFilter do
   @spec drop_by_key(%{any => any}, [any]) :: %{any => any}
   def drop_by_key(map, keys_to_reject) when is_map(map) do
     drop_by(map, fn(key, _) -> key in keys_to_reject end)
+  end
+
+  @spec take_by(map, keys_to_select) :: map
+  def take_by(map, keys_to_select) when is_map(map) do
+    map
+    |> Enum.reduce(%{},
+    fn ({key, val}, acc) ->
+      Map.merge(acc, take_by(val, keys_to_select))
+    end)
+    |>
+    Map.merge(Map.take(map, keys_to_select))
+  end
+
+  def take_by(_elem, _) do
+    %{}
+  end
+
+  @doc """
+  Take a (nested) map and keep any values with specified keys in the
+  keys_to_select list.
+  """
+  @spec take_by_key(%{any => any}, [any]) :: %{any => any}
+  def take_by_key(map, keys_to_select) when is_map(map) do
+    Map.merge(
+      take_by(map, keys_to_select),
+      Map.take(map, keys_to_select))
   end
 end

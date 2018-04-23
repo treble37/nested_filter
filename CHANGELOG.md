@@ -6,6 +6,12 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 1.2.1 - 4/22/18 Sun
+
+* [ENHANCEMENT] Add a take_by_key function which returns a map based on user
+specified keys. A duplicate key's values are overwritten (or merged if the value
+is a map).
+
 ## 1.1.1 - 8/25/17 Fri
 
 * [ENHANCEMENT] Filter out lists of maps
