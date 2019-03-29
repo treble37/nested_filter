@@ -5,15 +5,14 @@
 [![Coverage Status](https://coveralls.io/repos/github/treble37/nested_filter/badge.svg?branch=master)](https://coveralls.io/github/treble37/nested_filter?branch=master)
 [![Hex.pm](https://img.shields.io/hexpm/v/nested_filter.svg)](https://hex.pm/packages/nested_filter)
 [![Hex.pm Downloads](https://img.shields.io/hexpm/dt/nested_filter.svg)](https://hex.pm/packages/nested_filter)
-[![Deps Status](https://beta.hexfaktor.org/badge/all/github/treble37/nested_filter.svg)](https://beta.hexfaktor.org/github/treble37/nested_filter)
 [![Inline docs](http://inch-ci.org/github/treble37/nested_filter.svg?branch=master)](http://inch-ci.org/github/treble37/nested_filter)
 [![GitHub stars](https://img.shields.io/github/stars/treble37/nested_filter.svg)](https://github.com/treble37/nested_filter/stargazers)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/treble37/nested_filter/master/LICENSE)
 
 ## The Problems
 
-1. You have a nested map (or a struct that you converted to a nested map) and you want to remove ALL the keys with specific values such as nil.
-2. You want to do a Map#take on a nested map
+1.  You have a nested map (or a struct that you converted to a nested map) and you want to remove ALL the keys with specific values such as nil.
+2.  You want to do a Map#take on a nested map
 
 ##### Example: Remove all the map keys with nil values
 
@@ -31,8 +30,8 @@ Map.drop(nested_map, [:c, :d])
 
 NestedFilter drills down into a nested map and can do any of the following:
 
-1. filters out keys according to user specified values.
-2. filters out values according to user specified keys.
+1.  filters out keys according to user specified values.
+2.  filters out values according to user specified keys.
 
 ## Installation
 
@@ -41,14 +40,13 @@ by adding `nested_filter` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:nested_filter, "~> 1.1.1"}]
+  [{:nested_filter, "~> 1.2.2"}]
 end
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/nested_filter](https://hexdocs.pm/nested_filter).
-
+be found at <https://hexdocs.pm/nested_filter>.
 
 ## Usage
 
