@@ -23,6 +23,8 @@ matrix:
       otp_release: 21.0
     - elixir: 1.5.1
       otp_release: 21.0
+    - elixir: 1.8.1
+      otp_release: 19.3
 
 after_script:
   - MIX_ENV=docs mix deps.get

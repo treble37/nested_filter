@@ -1,7 +1,9 @@
-engines:
+plugins:
   credo:
     enabled: true
-    channel: "beta"
+    strict: true
+    all: true
+    only: "warning"
 ratings:
   paths:
   - "**.ex"
