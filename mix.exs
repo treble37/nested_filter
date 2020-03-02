@@ -53,7 +53,7 @@ defmodule NestedFilter.Mixfile do
       {:ex_doc, ">= 0.21.2", only: :dev},
       {:excoveralls, "~> 0.12", only: :test},
       {:inch_ex, "~> 2.0.0", only: :docs},
-      {:credo, "~> 1.1.5", only: [:dev, :test]}
+      {:credo, "~> 1.2.3", only: [:dev, :test]}
     ]
   end
 end
