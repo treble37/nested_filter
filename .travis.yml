@@ -5,22 +5,32 @@ elixir:
   - 1.8.2
   - 1.9.4
   - 1.10.0
+  - 1.11.1
 
 otp_release:
   - 19.3
   - 20.0
   - 21.0
   - 22.1
+  - 23.1
 
 matrix:
   exclude:
     - elixir: 1.8.2
       otp_release: 19.3
+    - elixir: 1.8.2
+      otp_release: 23.1
     - elixir: 1.9.4
       otp_release: 19.3
+    - elixir: 1.9.4
+      otp_release: 23.1
     - elixir: 1.10.0
       otp_release: 19.3
     - elixir: 1.10.0
+      otp_release: 20.0
+    - elixir: 1.11.1
+      otp_release: 19.3
+    - elixir: 1.11.1
       otp_release: 20.0
 
 after_script:
