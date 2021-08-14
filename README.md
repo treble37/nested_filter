@@ -1,6 +1,5 @@
 # NestedFilter
-
-[![Build Status](https://travis-ci.org/treble37/nested_filter.svg?branch=master)](https://travis-ci.org/treble37/nested_filter)
+![Build](https://github.com/treble37/nested_filter/actions/workflows/nested_filter_ci.yml/badge.svg?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ba239c585908a0aad2ac/maintainability)](https://codeclimate.com/github/treble37/nested_filter/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/ba239c585908a0aad2ac/test_coverage)](https://codeclimate.com/github/treble37/nested_filter/test_coverage)
 [![Coverage Status](https://coveralls.io/repos/github/treble37/nested_filter/badge.svg?branch=master)](https://coveralls.io/github/treble37/nested_filter?branch=master)
