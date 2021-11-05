@@ -1,12 +1,12 @@
 # NestedFilter
+
 ![Build](https://github.com/treble37/nested_filter/actions/workflows/nested_filter_ci.yml/badge.svg?branch=master)
-[![Maintainability](https://api.codeclimate.com/v1/badges/ba239c585908a0aad2ac/maintainability)](https://codeclimate.com/github/treble37/nested_filter/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/ba239c585908a0aad2ac/test_coverage)](https://codeclimate.com/github/treble37/nested_filter/test_coverage)
-[![Coverage Status](https://coveralls.io/repos/github/treble37/nested_filter/badge.svg?branch=master)](https://coveralls.io/github/treble37/nested_filter?branch=master)
-[![Hex.pm](https://img.shields.io/hexpm/v/nested_filter.svg)](https://hex.pm/packages/nested_filter)
-[![Hex.pm Downloads](https://img.shields.io/hexpm/dt/nested_filter.svg)](https://hex.pm/packages/nested_filter)
 [![GitHub stars](https://img.shields.io/github/stars/treble37/nested_filter.svg)](https://github.com/treble37/nested_filter/stargazers)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/treble37/nested_filter/master/LICENSE)
+[![Module Version](https://img.shields.io/hexpm/v/nested_filter.svg)](https://hex.pm/packages/nested_filter)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/nested_filter/)
+[![Total Download](https://img.shields.io/hexpm/dt/nested_filter.svg)](https://hex.pm/packages/nested_filter)
+[![License](https://img.shields.io/hexpm/l/nested_filter.svg)](https://github.com/treble37/nested_filter/blob/master/LICENSE.md)
+[![Last Updated](https://img.shields.io/github/last-commit/treble37/nested_filter.svg)](https://github.com/treble37/nested_filter/commits/master)
 
 ## The Problems
 
@@ -34,12 +34,14 @@ NestedFilter drills down into a nested map and can do any of the following:
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `nested_filter` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `:nested_filter` to your list of
+dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:nested_filter, "~> 1.2.2"}]
+  [
+    {:nested_filter, "~> 1.2.2"}
+  ]
 end
 ```
 
@@ -89,3 +91,11 @@ assert NestedFilter.take_by_key(nested_map, [:b, :f]) == %{b: 1, f: 4 }
 ```
 
 You can browse the tests for more usage examples.
+
+
+## Copyright and License
+
+Copyright (c) 2017 Bruce Park
+
+This work is free. You can redistribute it and/or modify it under the
+terms of the MIT License. See the [LICENSE.md](./LICENSE.md) file for more details.

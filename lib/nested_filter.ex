@@ -35,7 +35,7 @@ defmodule NestedFilter do
 
   @doc """
   Take a (nested) map and filter out any keys with specified values in the
-  values_to_reject list.
+  `values_to_reject` list.
   """
   @spec drop_by_value(%{any => any}, [any]) :: %{any => any}
   def drop_by_value(map, values_to_reject) when is_map(map) do
@@ -44,7 +44,7 @@ defmodule NestedFilter do
 
   @doc """
   Take a (nested) map and filter out any values with specified keys in the
-  keys_to_reject list.
+  `keys_to_reject` list.
   """
   @spec drop_by_key(%{any => any}, [any]) :: %{any => any}
   def drop_by_key(map, keys_to_reject) when is_map(map) do
@@ -68,7 +68,7 @@ defmodule NestedFilter do
 
   @doc """
   Take a (nested) map and keep any values with specified keys in the
-  keys_to_select list.
+  `keys_to_select` list.
   """
   @spec take_by_key(%{any => any}, [any]) :: %{any => any}
   def take_by_key(map, keys_to_select) when is_map(map) do
