@@ -9,45 +9,40 @@ on:
 jobs:
   test-elixir:
     name: Build and test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
+      MIX_ENV: test
       FORCE_COLOR: 1
     strategy:
       fail-fast: false
       matrix:
-        elixir: [1.14.x, 1.13.x, 1.12.x, 1.11.x, 1.10.x, 1.9.x, 1.8.x, 1.7.x]
         include:
-          - elixir: 1.7.x
-            otp: 20.x
-          - elixir: 1.8.x
-            otp: 20.x
-          - elixir: 1.9.x
-            otp: 21.x
-          - elixir: 1.10.x
-            otp: 22.x
-          - elixir: 1.11.x
-            otp: 23.x
-          - elixir: 1.12.x
-            otp: 24.x
-          - elixir: 1.13.x
-            otp: 25.x
-          - elixir: 1.14.x
-            otp: 25.x
+          - pair:
+              elixir: 1.13.x
+              otp: 24.3
+          - pair:
+              elixir: 1.14.x
+              otp: 25.3
+          - pair:
+              elixir: 1.15.6
+              otp: 26.0.2
 
     steps:
     - uses: actions/checkout@v3
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
       with:
-        otp-version: ${{ matrix.otp }}
-        elixir-version: ${{ matrix.elixir }}
+        otp-version: ${{ matrix.pair.otp }}
+        elixir-version: ${{ matrix.pair.elixir }}
     - name: Restore dependencies cache
       uses: actions/cache@v3
       with:
         path: deps
-        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}-${{ matrix.otp }}
-        restore-keys: ${{ runner.os }}-mix-
+        key: mix-${{ runner.os }}-${{ hashFiles('**/mix.lock') }}-${{ matrix.pair.otp }}
+        restore-keys: mix-${{ runner.os }}-
     - name: Install dependencies
-      run: mix deps.get --force
+      run: mix deps.get --only test
+    - name: Compile deps
+      run: mix deps.compile
     - name: Run tests
       run: mix test
