@@ -5,7 +5,7 @@ defmodule NestedFilter.Mixfile do
     [
       app: :nested_filter,
       version: "1.2.2",
-      elixir: ">= 1.7.0",
+      elixir: ">= 1.9.0",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
