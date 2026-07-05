@@ -50,7 +50,7 @@ defmodule NestedFilter.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, ">= 0.30.6", only: :dev},
+      {:ex_doc, ">= 0.40.0", only: :dev},
       {:excoveralls, "~> 0.18.5", only: :test},
       {:credo, "~> 1.7.0", only: [:dev, :test]}
     ]
