@@ -238,6 +238,11 @@ defmodule NestedFilterTest do
 
       assert NestedFilter.filter(nested_map, fn k, _v -> k == :name end, structs: :convert) ==
                %{user: %{name: "ada"}}
+
+      bare_struct = %Profile{name: "ada", email: nil}
+
+      assert NestedFilter.filter(bare_struct, fn k, _v -> k == :name end, structs: :convert) ==
+               %{name: "ada"}
     end
 
     test "structs: :error raises ArgumentError naming the struct module" do
@@ -245,6 +250,10 @@ defmodule NestedFilterTest do
 
       assert_raise ArgumentError, ~r/NestedFilterTest\.Profile/, fn ->
         NestedFilter.filter(nested_map, fn k, _v -> k == :name end, structs: :error)
+      end
+
+      assert_raise ArgumentError, ~r/NestedFilterTest\.Profile/, fn ->
+        NestedFilter.filter(%Profile{name: "ada"}, fn k, _v -> k == :name end, structs: :error)
       end
     end
 
