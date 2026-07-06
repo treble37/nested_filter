@@ -254,26 +254,40 @@ defmodule NestedFilterTest do
     end
   end
 
-  test "take a nested map's values by key (distinct nested keys)" do
-    nested_map = %{a: %{b: 2}, c: %{d: 3, e: %{f: 4, g: %{h: %{1 => 2}}}}}
+  describe "take_by_key/3 (structure-preserving)" do
+    test "no flattening, no data loss on key collisions across branches" do
+      nested_map = %{a: %{x: 1}, b: %{x: 2}}
+      assert NestedFilter.take_by_key(nested_map, [:x]) == %{a: %{x: 1}, b: %{x: 2}}
+    end
 
-    assert NestedFilter.take_by_key(nested_map, [:b, :f, :h]) ==
-             %{b: 2, f: 4, h: %{1 => 2}}
-  end
+    test "keeps matches at the path where they were found" do
+      nested_map = %{a: %{b: 2}, c: %{d: 3, e: %{f: 4, g: %{h: %{1 => 2}}}}}
 
-  test "take a nested map's values by key and merges map values of duplicate keys" do
-    nested_map = %{a: 1, b: %{a: 2, b: 3}, c: %{a: %{a: 1, b: 2}, b: 2, c: %{d: 1, e: 2}}}
+      assert NestedFilter.take_by_key(nested_map, [:b, :f, :h]) ==
+               %{a: %{b: 2}, c: %{e: %{f: 4, g: %{h: %{1 => 2}}}}}
+    end
 
-    assert NestedFilter.take_by_key(nested_map, [:b, :c]) == %{
-             b: %{b: 3, a: 2},
-             c: %{b: 2, c: %{d: 1, e: 2}, a: %{a: 1, b: 2}}
-           }
-  end
+    test "matched entries are kept whole, including nested duplicates" do
+      nested_map = %{a: 1, b: %{a: 2, b: 3}, c: %{a: %{a: 1, b: 2}, b: 2, c: %{d: 1, e: 2}}}
 
-  test "take a nested map's values by key (duplicate keys) and overwrite non-map duplicate values" do
-    nested_map = %{a: %{b: 2}, c: 3, e: %{f: 4}, b: 1}
+      assert NestedFilter.take_by_key(nested_map, [:b, :c]) == %{
+               b: %{a: 2, b: 3},
+               c: %{a: %{a: 1, b: 2}, b: 2, c: %{d: 1, e: 2}}
+             }
+    end
 
-    assert NestedFilter.take_by_key(nested_map, [:b, :f]) ==
-             %{b: 1, f: 4}
+    test "keys matched at different depths survive independently" do
+      nested_map = %{a: %{b: 2}, c: 3, e: %{f: 4}, b: 1}
+
+      assert NestedFilter.take_by_key(nested_map, [:b, :f]) ==
+               %{a: %{b: 2}, b: 1, e: %{f: 4}}
+    end
+
+    test "forwards the structs option" do
+      nested_map = %{user: %Profile{name: "ada", email: nil}}
+
+      assert NestedFilter.take_by_key(nested_map, [:name], structs: :convert) ==
+               %{user: %{name: "ada"}}
+    end
   end
 end

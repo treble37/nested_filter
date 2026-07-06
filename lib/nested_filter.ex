@@ -250,14 +250,28 @@ defmodule NestedFilter do
   end
 
   @doc """
-  Take a (nested) map and keep any values with specified keys in the
-  keys_to_select list.
+  Recursively keeps map entries whose key is in `keys_to_select`,
+  preserving the structure they were found in.
+
+  Sugar for `filter(map, fn key, _val -> key in keys_to_select end, opts)` —
+  see `filter/3` for the traversal semantics and options. Matches stay at
+  the path where they were found; sibling branches are never merged, and
+  branches without a match are pruned.
+
+  > #### Changed in 2.0 {: .warning}
+  >
+  > In 1.x this function flattened all matches into a single-level map,
+  > silently losing data when the same key appeared in more than one
+  > branch. It is now structure-preserving.
+
+  ## Examples
+
+      iex> NestedFilter.take_by_key(%{a: %{x: 1}, b: %{x: 2}}, [:x])
+      %{a: %{x: 1}, b: %{x: 2}}
+
   """
-  @spec take_by_key(%{any => any}, [any]) :: %{any => any}
-  def take_by_key(map, keys_to_select) when is_map(map) do
-    Map.merge(
-      take_by(map, keys_to_select),
-      Map.take(map, keys_to_select)
-    )
+  @spec take_by_key(map, keys_to_select, keyword) :: map
+  def take_by_key(map, keys_to_select, opts \\ []) when is_map(map) do
+    filter(map, fn key, _val -> key in keys_to_select end, opts)
   end
 end
