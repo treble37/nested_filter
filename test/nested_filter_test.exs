@@ -177,6 +177,83 @@ defmodule NestedFilterTest do
     end
   end
 
+  describe "filter/3" do
+    test "keeps matched entries and containers with surviving descendants, pruning the rest" do
+      nested_map = %{a: %{x: 1}, b: %{y: 2}, c: [%{x: 3, y: 4}, %{y: 5}]}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k in [:x] end) ==
+               %{a: %{x: 1}, c: [%{x: 3}]}
+    end
+
+    test "matched entries are kept whole: no recursion into a matched value" do
+      nested_map = %{user: %{name: "ada", password: "secret"}, meta: %{z: 1}}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :user end) ==
+               %{user: %{name: "ada", password: "secret"}}
+    end
+
+    test "no cross-branch merging or data loss on key collisions" do
+      nested_map = %{a: %{x: 1}, b: %{x: 2}}
+      assert NestedFilter.filter(nested_map, fn k, _v -> k in [:x] end) == nested_map
+    end
+
+    test "branches with no surviving content are pruned entirely" do
+      nested_map = %{a: %{b: %{c: 1}}, d: 2}
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :nope end) == %{}
+    end
+
+    test "non-container list elements with no surviving content are pruned" do
+      nested_map = %{c: [1, "two", %{x: 3}]}
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :x end) == %{c: [%{x: 3}]}
+    end
+
+    test "a top-level list is traversed symmetrically" do
+      list = [%{x: 1}, %{y: 2}, 3]
+      assert NestedFilter.filter(list, fn k, _v -> k == :x end) == [%{x: 1}]
+    end
+
+    test "mixed atom and string keys are compared with plain equality" do
+      nested_map = %{"x" => 1, :x => 2, "b" => %{"x" => 3}, "c" => %{y: 4}}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == "x" end) ==
+               %{"x" => 1, "b" => %{"x" => 3}}
+    end
+
+    test "structs are leaves by default: kept whole when matched, pruned when not" do
+      profile = %Profile{name: "ada", email: nil}
+
+      assert NestedFilter.filter(%{user: profile, other: 1}, fn k, _v -> k == :user end) ==
+               %{user: profile}
+
+      assert NestedFilter.filter(%{user: profile}, fn k, _v -> k == :nope end) == %{}
+    end
+
+    test "a bare struct passes through unchanged" do
+      profile = %Profile{name: "ada", email: nil}
+      assert NestedFilter.filter(profile, fn k, _v -> k == :name end) == profile
+    end
+
+    test "structs: :convert recurses into the struct as a plain map" do
+      nested_map = %{user: %Profile{name: "ada", email: nil}}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :name end, structs: :convert) ==
+               %{user: %{name: "ada"}}
+    end
+
+    test "structs: :error raises ArgumentError naming the struct module" do
+      nested_map = %{user: %Profile{name: "ada", email: nil}}
+
+      assert_raise ArgumentError, ~r/NestedFilterTest\.Profile/, fn ->
+        NestedFilter.filter(nested_map, fn k, _v -> k == :name end, structs: :error)
+      end
+    end
+
+    test "non-map, non-list input is returned unchanged" do
+      assert NestedFilter.filter(5, fn k, _v -> k == :x end) == 5
+      assert NestedFilter.filter("hello", fn k, _v -> k == :x end) == "hello"
+    end
+  end
+
   test "take a nested map's values by key (distinct nested keys)" do
     nested_map = %{a: %{b: 2}, c: %{d: 3, e: %{f: 4, g: %{h: %{1 => 2}}}}}
 
