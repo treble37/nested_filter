@@ -1,17 +1,22 @@
 defmodule NestedFilter.Mixfile do
   use Mix.Project
 
+  @version "2.0.0"
+  @source_url "https://github.com/treble37/nested_filter"
+
   def project do
     [
       app: :nested_filter,
-      version: "2.0.0",
+      version: @version,
       elixir: "~> 1.15",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
       description: description(),
       package: package(),
-      deps: deps()
+      deps: deps(),
+      source_url: @source_url,
+      docs: [source_ref: "v#{@version}"]
     ]
   end
 
@@ -20,7 +25,7 @@ defmodule NestedFilter.Mixfile do
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Bruce Park"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/treble37/nested_filter"}
+      links: %{"GitHub" => @source_url}
     ]
   end
 
