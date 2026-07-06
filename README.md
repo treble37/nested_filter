@@ -1,91 +1,126 @@
 # NestedFilter
+
 ![Build](https://github.com/treble37/nested_filter/actions/workflows/nested_filter_ci.yml/badge.svg?branch=main)
-[![Maintainability](https://api.codeclimate.com/v1/badges/ba239c585908a0aad2ac/maintainability)](https://codeclimate.com/github/treble37/nested_filter/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/ba239c585908a0aad2ac/test_coverage)](https://codeclimate.com/github/treble37/nested_filter/test_coverage)
-[![Coverage Status](https://coveralls.io/repos/github/treble37/nested_filter/badge.svg?branch=master)](https://coveralls.io/github/treble37/nested_filter?branch=master)
 [![Hex.pm](https://img.shields.io/hexpm/v/nested_filter.svg)](https://hex.pm/packages/nested_filter)
 [![Hex.pm Downloads](https://img.shields.io/hexpm/dt/nested_filter.svg)](https://hex.pm/packages/nested_filter)
-[![GitHub stars](https://img.shields.io/github/stars/treble37/nested_filter.svg)](https://github.com/treble37/nested_filter/stargazers)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/treble37/nested_filter/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/treble37/nested_filter/main/LICENSE)
 
-## The Problems
+Structure-preserving filter/reject for nested maps and lists: drop or take
+keys and values at any depth without flattening or losing data. Zero runtime
+dependencies.
 
-1.  You have a nested map (or a struct that you converted to a nested map) and you want to remove ALL the keys with specific values such as nil.
-2.  You want to do a Map#take on a nested map
+`Map.take/2` and `Map.drop/2` only see the top level. NestedFilter walks the
+whole structure — maps inside maps, maps inside lists — and never merges
+sibling branches or invents values: what survives is always at the path where
+it appeared in the input.
 
-##### Example: Remove all the map keys with nil values
+Every example below is copied verbatim from a doctest, so it runs exactly as
+shown.
+
+## Recipes
+
+### Clean params before insert
+
+Drop `nil` and blank values at any depth before handing user input to a
+changeset or query:
 
 ```elixir
-nested_map = %{a: 1, b: %{c: nil, d: nil}, c: nil}
-
-Map.drop(nested_map, [:c, :d])
-# => %{a: 1, b: %{c: nil, d: nil}}
-
-# But you actually wanted:
-# => %{a: 1}
+iex> params = %{"name" => "Ada", "bio" => nil, "address" => %{"city" => "London", "zip" => ""}}
+iex> NestedFilter.drop_by_value(params, [nil, ""])
+%{"name" => "Ada", "address" => %{"city" => "London"}}
 ```
 
-## The Solution: NestedFilter
+### Strip nils before JSON encoding
 
-NestedFilter drills down into a nested map and can do any of the following:
+Remove every `nil` entry so encoded payloads carry no `null` noise:
 
-1.  filters out keys according to user specified values.
-2.  filters out values according to user specified keys.
+```elixir
+iex> payload = %{id: 7, tags: ["a", "b"], meta: %{source: nil, ip: "1.2.3.4"}}
+iex> NestedFilter.reject(payload, fn _k, v -> is_nil(v) end)
+%{id: 7, tags: ["a", "b"], meta: %{ip: "1.2.3.4"}}
+```
+
+### Drop sensitive keys everywhere
+
+Remove known-bad keys wherever they appear, however deeply nested:
+
+```elixir
+iex> event = %{user: %{email: "ada@example.com", password: "s3cret"}, session: %{token: "abc", ttl: 60}}
+iex> NestedFilter.drop_by_key(event, [:password, :token])
+%{user: %{email: "ada@example.com"}, session: %{ttl: 60}}
+```
+
+### Take fields, structure preserved
+
+Keep only the fields you care about without flattening or losing duplicates
+across branches:
+
+```elixir
+iex> order = %{buyer: %{id: 1, name: "Ada"}, items: [%{id: 10, sku: "X"}, %{id: 11, sku: "Y"}]}
+iex> NestedFilter.take_by_key(order, [:id])
+%{buyer: %{id: 1}, items: [%{id: 10}, %{id: 11}]}
+```
+
+### Sanitize logs
+
+Redact by pattern when the exact key names aren't known up front:
+
+```elixir
+iex> log = %{"msg" => "login ok", "user_password" => "hunter2", "ctx" => %{"api_token" => "xyz"}}
+iex> NestedFilter.reject(log, fn k, _v -> is_binary(k) and (k =~ "password" or k =~ "token") end)
+%{"msg" => "login ok", "ctx" => %{}}
+```
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `nested_filter` to your list of dependencies in `mix.exs`:
+Add `nested_filter` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:nested_filter, "~> 1.2.2"}]
+  [{:nested_filter, "~> 2.0"}]
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/nested_filter>.
+Requires Elixir 1.15 or later. Full documentation is at
+[hexdocs.pm/nested_filter](https://hexdocs.pm/nested_filter).
 
-## Usage
+## API
 
-By default, when removing user specified values, empty values will be preserved
-(see Case 1 below). You can add empty values to the user specified values list
-if you wish those "empty values" (e.g., empty maps) to be removed.
+Two engine functions take a `predicate` receiving each key and value:
 
-### NestedFilter.drop_by_value
+- `NestedFilter.reject/3` — recursively remove matching entries
+- `NestedFilter.filter/3` — recursively keep matching entries, pruning
+  branches without a match; a matched entry is kept whole
 
-```elixir
-# Case 1: Remove the nil values from a nested map, preserving empty map values
+Three convenience functions cover the common cases:
 
-nested_map = %{a: 1, b: %{m: nil, n: 2}, c: %{p: %{q: nil, r: nil}, s: %{t: 2, u: 3}} }
-NestedFilter.drop_by_value(nested_map, [nil])
+- `NestedFilter.drop_by_value/3` — remove entries whose value is in a list
+- `NestedFilter.drop_by_key/3` — remove entries whose key is in a list
+- `NestedFilter.take_by_key/3` — keep entries whose key is in a list,
+  structure preserved
 
-# => %{a: 1, b: %{n: 2}, c: %{p: %{}, s: %{t: 2, u: 3}} }
+## Semantics worth knowing
 
-# Case 2: Remove the nil values from a nested map, removing empty map values
+- **Structure is sacred.** Matches stay at the path where they were found.
+  Sibling branches are never merged, so duplicate keys in different branches
+  never clobber each other.
+- **`reject` preserves empty maps; `filter` prunes empty branches.** Rejecting
+  every entry of a nested map leaves `%{}` at its path (add `%{}` to
+  `drop_by_value/3`'s list to remove those too), while `filter` drops any
+  branch with no surviving content.
+- **Lists are traversed, not filtered by value.** `reject` leaves non-map list
+  elements untouched; `filter` prunes list elements with no surviving content.
+- **Structs are opaque leaves by default.** Pass `structs: :convert` to
+  recurse into them as plain maps, or `structs: :error` to raise if one is
+  encountered. See the `:structs` option on `reject/3`.
 
-nested_map = %{a: 1, b: %{m: nil, n: 2}, c: %{p: %{q: nil, r: nil}, s: %{t: 2, u: 3}} }
-NestedFilter.drop_by_value(nested_map, [nil, %{}])
-# => %{a: 1, b: %{n: 2}, c: %{s: %{t: 2, u: 3}} }
-```
+## Upgrading from 1.x
 
-### NestedFilter.drop_by_key
+Version 2.0 changed `take_by_key/3` from flattening (which silently lost data
+on duplicate keys) to structure-preserving, removed the undocumented
+`drop_by/2` and `take_by/2`, and raised the Elixir floor to 1.15. See the
+[CHANGELOG](CHANGELOG.md) for the full migration table.
 
-```elixir
-# Case 1: Remove values from a nested map by key
+## License
 
-nested_map = %{a: 1, b: %{a: 2, b: 3}, c: %{a: %{a: 1, b: 2}, b: 2, c: %{d: 1, e: 2}}}
-assert NestedFilter.drop_by_key(nested_map, [:a]) == %{b: %{b: 3},c: %{b: 2, c: %{d: 1, e: 2}}}
-```
-
-### NestedFilter.take_by_key
-
-```elixir
-# Case 1: Take values from a nested map by key
-
-nested_map = %{a: %{b: 1}, c: 3, e: %{f: 4}}
-assert NestedFilter.take_by_key(nested_map, [:b, :f]) == %{b: 1, f: 4 }
-```
-
-You can browse the tests for more usage examples.
+MIT — see [LICENSE](LICENSE).

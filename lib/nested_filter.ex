@@ -16,6 +16,50 @@ defmodule NestedFilter do
   survives is always at the path where it appeared in the input. Structs
   are treated as opaque leaf values by default; see the `:structs` option
   on `reject/3`.
+
+  ## Recipes
+
+  ### Clean params before insert
+
+  Drop `nil` and blank values at any depth before handing user input to a
+  changeset or query:
+
+      iex> params = %{"name" => "Ada", "bio" => nil, "address" => %{"city" => "London", "zip" => ""}}
+      iex> NestedFilter.drop_by_value(params, [nil, ""])
+      %{"name" => "Ada", "address" => %{"city" => "London"}}
+
+  ### Strip nils before JSON encoding
+
+  Remove every `nil` entry so encoded payloads carry no `null` noise:
+
+      iex> payload = %{id: 7, tags: ["a", "b"], meta: %{source: nil, ip: "1.2.3.4"}}
+      iex> NestedFilter.reject(payload, fn _k, v -> is_nil(v) end)
+      %{id: 7, tags: ["a", "b"], meta: %{ip: "1.2.3.4"}}
+
+  ### Drop sensitive keys everywhere
+
+  Remove known-bad keys wherever they appear, however deeply nested:
+
+      iex> event = %{user: %{email: "ada@example.com", password: "s3cret"}, session: %{token: "abc", ttl: 60}}
+      iex> NestedFilter.drop_by_key(event, [:password, :token])
+      %{user: %{email: "ada@example.com"}, session: %{ttl: 60}}
+
+  ### Take fields, structure preserved
+
+  Keep only the fields you care about without flattening or losing
+  duplicates across branches:
+
+      iex> order = %{buyer: %{id: 1, name: "Ada"}, items: [%{id: 10, sku: "X"}, %{id: 11, sku: "Y"}]}
+      iex> NestedFilter.take_by_key(order, [:id])
+      %{buyer: %{id: 1}, items: [%{id: 10}, %{id: 11}]}
+
+  ### Sanitize logs
+
+  Redact by pattern when the exact key names aren't known up front:
+
+      iex> log = %{"msg" => "login ok", "user_password" => "hunter2", "ctx" => %{"api_token" => "xyz"}}
+      iex> NestedFilter.reject(log, fn k, _v -> is_binary(k) and (k =~ "password" or k =~ "token") end)
+      %{"msg" => "login ok", "ctx" => %{}}
   """
   @type key :: any
   @type val :: any
