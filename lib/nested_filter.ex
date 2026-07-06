@@ -1,6 +1,21 @@
 defmodule NestedFilter do
   @moduledoc """
-  Documentation for NestedFilter.
+  Structure-preserving filtering for nested maps and lists.
+
+  Two engine functions traverse arbitrarily nested maps and lists with
+  a predicate:
+
+    * `reject/3` — recursively remove matching entries
+    * `filter/3` — recursively keep matching entries, pruning branches
+      without a match
+
+  Three convenience functions cover the common cases: `drop_by_value/3`,
+  `drop_by_key/3`, and `take_by_key/3`.
+
+  No operation ever merges sibling branches or invents values — what
+  survives is always at the path where it appeared in the input. Structs
+  are treated as opaque leaf values by default; see the `:structs` option
+  on `reject/3`.
   """
   @type key :: any
   @type val :: any
@@ -170,35 +185,6 @@ defmodule NestedFilter do
           "encountered struct #{inspect(struct.__struct__)} with structs: :error"
   end
 
-  @spec drop_by(struct, predicate) :: struct
-  def drop_by(%_{} = struct, _), do: struct
-
-  @spec drop_by(map, predicate) :: map
-  def drop_by(map, predicate) when is_map(map) do
-    map
-    |> Enum.reduce(
-      %{},
-      fn {key, val}, acc ->
-        cleaned_val = drop_by(val, predicate)
-
-        if predicate.(key, cleaned_val) do
-          acc
-        else
-          Map.put(acc, key, cleaned_val)
-        end
-      end
-    )
-  end
-
-  @spec drop_by(list, predicate) :: list
-  def drop_by(list, predicate) when is_list(list) do
-    Enum.map(list, &drop_by(&1, predicate))
-  end
-
-  def drop_by(elem, _) do
-    elem
-  end
-
   @doc """
   Recursively removes map entries whose value is in `values_to_reject`.
 
@@ -231,22 +217,6 @@ defmodule NestedFilter do
   @spec drop_by_key(map, [key], keyword) :: map
   def drop_by_key(map, keys_to_reject, opts \\ []) when is_map(map) do
     reject(map, fn key, _val -> key in keys_to_reject end, opts)
-  end
-
-  @spec take_by(map, keys_to_select) :: map
-  def take_by(map, keys_to_select) when is_map(map) do
-    map
-    |> Enum.reduce(
-      %{},
-      fn {_key, val}, acc ->
-        Map.merge(acc, take_by(val, keys_to_select))
-      end
-    )
-    |> Map.merge(Map.take(map, keys_to_select))
-  end
-
-  def take_by(_elem, _) do
-    %{}
   end
 
   @doc """
