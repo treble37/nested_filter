@@ -4,8 +4,8 @@ defmodule NestedFilter.Mixfile do
   def project do
     [
       app: :nested_filter,
-      version: "1.2.2",
-      elixir: ">= 1.9.0",
+      version: "2.0.0",
+      elixir: "~> 1.15",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
@@ -26,8 +26,9 @@ defmodule NestedFilter.Mixfile do
 
   defp description do
     """
-    Drill down into a nested map and filter out keys according to user
-    specified values
+    Structure-preserving filter/reject for nested maps and lists: drop or
+    take keys and values at any depth without flattening or losing data.
+    Zero runtime dependencies.
     """
   end
 
@@ -52,7 +53,8 @@ defmodule NestedFilter.Mixfile do
     [
       {:ex_doc, ">= 0.40.0", only: :dev},
       {:excoveralls, "~> 0.18.5", only: :test},
-      {:credo, "~> 1.7.0", only: [:dev, :test]}
+      {:credo, "~> 1.7.0", only: [:dev, :test]},
+      {:stream_data, "~> 1.1", only: [:test, :dev]}
     ]
   end
 end
