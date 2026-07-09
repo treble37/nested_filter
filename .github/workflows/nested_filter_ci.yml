@@ -37,7 +37,7 @@ jobs:
               otp: 28.1.x
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
       with:
@@ -63,7 +63,7 @@ jobs:
       MIX_ENV: test
       FORCE_COLOR: 1
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
       with:
