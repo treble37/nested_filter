@@ -44,7 +44,7 @@ jobs:
         otp-version: ${{ matrix.pair.otp }}
         elixir-version: ${{ matrix.pair.elixir }}
     - name: Restore dependencies cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: deps
         key: mix-${{ runner.os }}-${{ hashFiles('**/mix.lock') }}-${{ matrix.pair.otp }}
@@ -70,7 +70,7 @@ jobs:
         otp-version: 28.1.x
         elixir-version: 1.20.x
     - name: Restore dependencies cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: deps
         key: mix-quality-${{ runner.os }}-${{ hashFiles('**/mix.lock') }}
