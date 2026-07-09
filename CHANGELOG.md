@@ -6,6 +6,35 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 2.0.0 - 7/6/26 Monday
+
+-   [BREAKING CHANGE] `take_by_key/3` is now structure-preserving. In 1.x it
+    flattened all matches into a single-level map, silently losing data when
+    the same key appeared in more than one branch. Matches now stay at the
+    path where they were found.
+-   [BREAKING CHANGE] Remove the public-but-undocumented `drop_by/2` and
+    `take_by/2`. Use `reject/3` and `filter/3` instead.
+-   [BREAKING CHANGE] Require Elixir ~> 1.15.
+-   [ENHANCEMENT] New engine functions: `reject/3` recursively removes
+    entries matching a predicate; `filter/3` recursively keeps matching
+    entries (kept whole) and prunes branches without a match.
+    `drop_by_value/3`, `drop_by_key/3`, and `take_by_key/3` are now sugar
+    over the engines and each accept an `opts` argument.
+-   [ENHANCEMENT] New `structs:` option on every function: `:leaf` (default)
+    passes structs through as opaque values, `:convert` recurses into them
+    via `Map.from_struct/1`, `:error` raises `ArgumentError` on any struct.
+-   [ENHANCEMENT] StreamData property suite; 100% test coverage.
+
+### Upgrading from 1.x
+
+| If you used                            | In 2.0                                                                                                    |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `take_by_key(map, keys)`               | Same call, new semantics: results keep their original nesting instead of being flattened (no more data loss on duplicate keys). Audit call sites that relied on a flat result. |
+| `drop_by/2`                            | `reject(map, predicate)` — e.g. `NestedFilter.reject(map, fn _k, v -> is_nil(v) end)`                     |
+| `take_by/2`                            | `filter(map, predicate)` — e.g. `NestedFilter.filter(map, fn k, _v -> k in [:id] end)`                    |
+| Structs converted by hand before 1.x calls | Pass `structs: :convert` (or keep the default `:leaf` to treat structs as opaque values)               |
+| Elixir < 1.15                          | Stay on `nested_filter ~> 1.2` or upgrade Elixir; 2.0 requires `~> 1.15`                                  |
+
 ## 1.2.2 - 5/30/19 Saturday
 
 -   [WARNING FIX] Remove warning from unused parameter (thanks
