@@ -177,6 +177,74 @@ defmodule NestedFilterTest do
     end
   end
 
+  describe "compact/2" do
+    test "removes nil values and prunes empty containers by default" do
+      nested_map = %{a: 1, b: nil, c: %{d: nil}, e: %{f: 1, g: nil}}
+
+      assert NestedFilter.compact(nested_map) == %{a: 1, e: %{f: 1}}
+    end
+
+    test "prunes empty containers bottom-up after nil removal" do
+      nested_map = %{
+        a: [%{b: %{c: nil}}],
+        d: [%{e: nil}, %{f: 1}],
+        g: %{h: %{i: nil}, j: [nil]}
+      }
+
+      assert NestedFilter.compact(nested_map) == %{d: [%{f: 1}], g: %{j: [nil]}}
+    end
+
+    test "prune_empty: false keeps empty containers left by nil removal" do
+      nested_map = %{a: 1, b: nil, c: %{d: nil}, e: [%{f: nil}]}
+
+      assert NestedFilter.compact(nested_map, prune_empty: false) == %{
+               a: 1,
+               c: %{},
+               e: [%{}]
+             }
+    end
+
+    test "list nils are untouched by default" do
+      assert NestedFilter.compact(%{a: [1, nil, 2]}) == %{a: [1, nil, 2]}
+    end
+
+    test "strip_list_nils: true removes nil elements from lists" do
+      assert NestedFilter.compact(%{a: [1, nil, 2]}, strip_list_nils: true) == %{a: [1, 2]}
+    end
+
+    test "strip_list_nils: true interacts with default empty-container pruning" do
+      nested_map = %{a: [nil], b: [nil, %{c: nil}], d: [nil, %{e: 1}]}
+
+      assert NestedFilter.compact(nested_map, strip_list_nils: true) == %{d: [%{e: 1}]}
+    end
+
+    test "structs are leaves by default: never entered, never altered" do
+      profile = %Profile{name: "ada", email: nil}
+
+      assert NestedFilter.compact(%{user: profile, junk: nil}) == %{user: profile}
+    end
+
+    test "structs: :convert recurses into the struct as a plain map" do
+      nested_map = %{user: %Profile{name: "ada", email: nil}}
+
+      assert NestedFilter.compact(nested_map, structs: :convert) == %{user: %{name: "ada"}}
+    end
+
+    test "structs: :error raises ArgumentError naming the struct module" do
+      nested_map = %{user: %Profile{name: "ada", email: nil}}
+
+      assert_raise ArgumentError, ~r/NestedFilterTest\.Profile/, fn ->
+        NestedFilter.compact(nested_map, structs: :error)
+      end
+    end
+
+    test "non-map, non-list input is returned unchanged" do
+      assert NestedFilter.compact(5) == 5
+      assert NestedFilter.compact("hello") == "hello"
+      assert NestedFilter.compact(nil) == nil
+    end
+  end
+
   describe "filter/3" do
     test "keeps matched entries and containers with surviving descendants, pruning the rest" do
       nested_map = %{a: %{x: 1}, b: %{y: 2}, c: [%{x: 3, y: 4}, %{y: 5}]}

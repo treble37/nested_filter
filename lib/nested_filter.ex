@@ -9,8 +9,8 @@ defmodule NestedFilter do
     * `filter/3` — recursively keep matching entries, pruning branches
       without a match
 
-  Three convenience functions cover the common cases: `drop_by_value/3`,
-  `drop_by_key/3`, and `take_by_key/3`.
+  Four convenience functions cover the common cases: `compact/2`,
+  `drop_by_value/3`, `drop_by_key/3`, and `take_by_key/3`.
 
   No operation ever merges sibling branches or invents values — what
   survives is always at the path where it appeared in the input. Structs
@@ -128,6 +128,50 @@ defmodule NestedFilter do
   def reject(elem, _predicate, _opts), do: elem
 
   @doc """
+  Recursively removes `nil` map values, then prunes containers left empty by
+  that removal.
+
+  `compact/2` uses the same traversal semantics and `:structs` option as
+  `reject/3`: non-container list elements are untouched by default, and
+  structs are treated as opaque leaves unless `structs: :convert` or
+  `structs: :error` is supplied.
+
+  ## Options
+
+    * `:prune_empty` - when `true` (default), removes map entries and list
+      elements whose cleaned value is an empty map or list
+    * `:strip_list_nils` - when `true`, also removes `nil` elements from lists;
+      defaults to `false`
+    * `:structs` - same meaning as in `reject/3`
+
+  ## Examples
+
+      iex> NestedFilter.compact(%{a: 1, b: nil, c: %{d: nil}, e: %{f: 1, g: nil}})
+      %{a: 1, e: %{f: 1}}
+
+      iex> NestedFilter.compact(%{a: [1, nil, 2]}, strip_list_nils: true)
+      %{a: [1, 2]}
+
+  """
+  @spec compact(map | list | any, keyword) :: map | list | any
+  def compact(data, opts \\ []) do
+    compacted = reject(data, fn _key, val -> is_nil(val) end, opts)
+
+    compacted =
+      if Keyword.get(opts, :strip_list_nils, false) do
+        strip_list_nils(compacted)
+      else
+        compacted
+      end
+
+    if Keyword.get(opts, :prune_empty, true) do
+      prune_empty_containers(compacted)
+    else
+      compacted
+    end
+  end
+
+  @doc """
   Recursively keeps map entries for which `predicate` returns a truthy value.
 
   A matched entry is kept whole: its value is not recursed into, so the
@@ -184,6 +228,47 @@ defmodule NestedFilter do
   end
 
   def filter(elem, _predicate, _opts), do: elem
+
+  defp strip_list_nils(%_{} = struct), do: struct
+
+  defp strip_list_nils(map) when is_map(map) do
+    Map.new(map, fn {key, val} -> {key, strip_list_nils(val)} end)
+  end
+
+  defp strip_list_nils(list) when is_list(list) do
+    list
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&strip_list_nils/1)
+  end
+
+  defp strip_list_nils(elem), do: elem
+
+  defp prune_empty_containers(%_{} = struct), do: struct
+
+  defp prune_empty_containers(map) when is_map(map) do
+    Enum.reduce(map, %{}, fn {key, val}, acc ->
+      pruned = prune_empty_containers(val)
+
+      if empty_container?(pruned) do
+        acc
+      else
+        Map.put(acc, key, pruned)
+      end
+    end)
+  end
+
+  defp prune_empty_containers(list) when is_list(list) do
+    list
+    |> Enum.map(&prune_empty_containers/1)
+    |> Enum.reject(&empty_container?/1)
+  end
+
+  defp prune_empty_containers(elem), do: elem
+
+  defp empty_container?(%_{}), do: false
+  defp empty_container?(map) when is_map(map), do: map_size(map) == 0
+  defp empty_container?(list) when is_list(list), do: list == []
+  defp empty_container?(_elem), do: false
 
   # A matched entry is kept whole; an unmatched one survives only if
   # filtering its value leaves surviving content.
