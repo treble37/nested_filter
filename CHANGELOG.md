@@ -6,6 +6,16 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 2.1.0 - 7/10/26 Friday
+
+-   [ENHANCEMENT] Add `compact/2` to remove `nil` map values recursively.
+    Empty containers are pruned by default with `prune_empty: true`, and
+    `strip_list_nils: true` optionally removes `nil` list elements.
+-   [ENHANCEMENT] Add `redact/3` to replace values selected by a keys list or
+    predicate. `replacement:` customizes the redaction value, and
+    `recurse_into_matched: true` searches matched containers for deeper
+    matches instead of replacing those containers wholesale.
+
 ## 2.0.0 - 7/6/26 Monday
 
 -   [BREAKING CHANGE] `take_by_key/3` is now structure-preserving. In 1.x it

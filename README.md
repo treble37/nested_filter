@@ -40,6 +40,15 @@ iex> NestedFilter.reject(payload, fn _k, v -> is_nil(v) end)
 %{id: 7, tags: ["a", "b"], meta: %{ip: "1.2.3.4"}}
 ```
 
+### Compact nested payloads
+
+Remove `nil` map values and prune containers left empty by that cleanup:
+
+```elixir
+iex> NestedFilter.compact(%{a: 1, b: nil, c: %{d: nil}, e: %{f: 1, g: nil}})
+%{a: 1, e: %{f: 1}}
+```
+
 ### Drop sensitive keys everywhere
 
 Remove known-bad keys wherever they appear, however deeply nested:
@@ -71,13 +80,22 @@ iex> NestedFilter.reject(log, fn k, _v -> is_binary(k) and (k =~ "password" or k
 %{"msg" => "login ok", "ctx" => %{}}
 ```
 
+### Redact sensitive values
+
+Replace sensitive values at any depth without dropping their keys:
+
+```elixir
+iex> NestedFilter.redact(%{user: %{name: "Ana", password: "hunter2"}, token: "abc"}, [:password, :token])
+%{user: %{name: "Ana", password: "[REDACTED]"}, token: "[REDACTED]"}
+```
+
 ## Installation
 
 Add `nested_filter` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:nested_filter, "~> 2.0"}]
+  [{:nested_filter, "~> 2.1"}]
 end
 ```
 
@@ -92,8 +110,11 @@ Two engine functions take a `predicate` receiving each key and value:
 - `NestedFilter.filter/3` — recursively keep matching entries, pruning
   branches without a match; a matched entry is kept whole
 
-Three convenience functions cover the common cases:
+Five convenience functions cover the common cases:
 
+- `NestedFilter.compact/2` — remove `nil` map values and optionally prune
+  empty containers or strip `nil` list elements
+- `NestedFilter.redact/3` — replace values matching keys or a predicate
 - `NestedFilter.drop_by_value/3` — remove entries whose value is in a list
 - `NestedFilter.drop_by_key/3` — remove entries whose key is in a list
 - `NestedFilter.take_by_key/3` — keep entries whose key is in a list,
