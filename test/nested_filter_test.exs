@@ -245,6 +245,113 @@ defmodule NestedFilterTest do
     end
   end
 
+  describe "redact/3" do
+    test "replaces values for matching keys at any depth" do
+      nested_map = %{user: %{name: "Ana", password: "hunter2"}, token: "abc"}
+
+      assert NestedFilter.redact(nested_map, [:password, :token]) == %{
+               user: %{name: "Ana", password: "[REDACTED]"},
+               token: "[REDACTED]"
+             }
+    end
+
+    test "supports a custom replacement value" do
+      nested_map = %{user: %{password: "hunter2"}, token: "abc"}
+
+      assert NestedFilter.redact(nested_map, [:password, :token], replacement: :hidden) == %{
+               user: %{password: :hidden},
+               token: :hidden
+             }
+    end
+
+    test "unmatched branches are still recursed for nested matches" do
+      nested_map = %{a: %{password: "one"}, b: %{c: %{token: "two"}}, d: "visible"}
+
+      assert NestedFilter.redact(nested_map, [:password, :token]) == %{
+               a: %{password: "[REDACTED]"},
+               b: %{c: %{token: "[REDACTED]"}},
+               d: "visible"
+             }
+    end
+
+    test "non-container list elements are untouched and map elements are recursed into" do
+      nested_map = %{events: ["raw", %{token: "abc"}, 123, %{meta: %{password: "secret"}}]}
+
+      assert NestedFilter.redact(nested_map, [:password, :token]) == %{
+               events: ["raw", %{token: "[REDACTED]"}, 123, %{meta: %{password: "[REDACTED]"}}]
+             }
+    end
+
+    test "structs are leaves by default: never entered, never altered" do
+      profile = %Profile{name: "ada", email: "ada@example.com"}
+
+      assert NestedFilter.redact(%{user: profile, email: "root@example.com"}, [:email]) == %{
+               user: profile,
+               email: "[REDACTED]"
+             }
+    end
+
+    test "structs: :convert recurses into the struct as a plain map" do
+      nested_map = %{user: %Profile{name: "ada", email: "ada@example.com"}}
+
+      assert NestedFilter.redact(nested_map, [:email], structs: :convert) == %{
+               user: %{name: "ada", email: "[REDACTED]"}
+             }
+    end
+
+    test "structs: :error raises ArgumentError naming the struct module" do
+      nested_map = %{user: %Profile{name: "ada", email: "ada@example.com"}}
+
+      assert_raise ArgumentError, ~r/NestedFilterTest\.Profile/, fn ->
+        NestedFilter.redact(nested_map, [:email], structs: :error)
+      end
+    end
+
+    test "non-map, non-list input is returned unchanged" do
+      assert NestedFilter.redact(5, [:password]) == 5
+      assert NestedFilter.redact("hello", [:password]) == "hello"
+      assert NestedFilter.redact(nil, [:password]) == nil
+    end
+
+    test "accepts a predicate for value-based matching" do
+      nested_map = %{card: "4111111111111111", note: "ok"}
+
+      assert NestedFilter.redact(nested_map, fn _key, val ->
+               is_binary(val) and String.match?(val, ~r/^\d{13,16}$/)
+             end) == %{card: "[REDACTED]", note: "ok"}
+    end
+
+    test "invalid matching input raises ArgumentError naming the bad argument" do
+      assert_raise ArgumentError, ~r/keys_or_predicate.*:password/, fn ->
+        NestedFilter.redact(%{password: "secret"}, :password)
+      end
+
+      assert_raise ArgumentError, ~r/keys_or_predicate/, fn ->
+        NestedFilter.redact(%{password: "secret"}, fn key -> key == :password end)
+      end
+    end
+
+    test "recurse_into_matched: true recurses into matched container values instead of replacing them" do
+      nested_map = %{token: %{value: "abc", meta: %{token: "nested-secret"}}}
+
+      assert NestedFilter.redact(nested_map, [:token], recurse_into_matched: true) == %{
+               token: %{value: "abc", meta: %{token: "[REDACTED]"}}
+             }
+    end
+
+    test "recurse_into_matched: true still replaces matched scalar values" do
+      assert NestedFilter.redact(%{token: "abc"}, [:token], recurse_into_matched: true) == %{
+               token: "[REDACTED]"
+             }
+    end
+
+    test "recurse_into_matched: false replaces matched container values wholesale by default" do
+      nested_map = %{token: %{value: "abc", meta: %{token: "nested-secret"}}}
+
+      assert NestedFilter.redact(nested_map, [:token]) == %{token: "[REDACTED]"}
+    end
+  end
+
   describe "filter/3" do
     test "keeps matched entries and containers with surviving descendants, pruning the rest" do
       nested_map = %{a: %{x: 1}, b: %{y: 2}, c: [%{x: 3, y: 4}, %{y: 5}]}

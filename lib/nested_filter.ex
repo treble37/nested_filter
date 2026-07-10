@@ -9,8 +9,8 @@ defmodule NestedFilter do
     * `filter/3` — recursively keep matching entries, pruning branches
       without a match
 
-  Four convenience functions cover the common cases: `compact/2`,
-  `drop_by_value/3`, `drop_by_key/3`, and `take_by_key/3`.
+  Five convenience functions cover the common cases: `compact/2`,
+  `redact/3`, `drop_by_value/3`, `drop_by_key/3`, and `take_by_key/3`.
 
   No operation ever merges sibling branches or invents values — what
   survives is always at the path where it appeared in the input. Structs
@@ -172,6 +172,41 @@ defmodule NestedFilter do
   end
 
   @doc """
+  Recursively replaces values whose map entry matches `keys_or_predicate`.
+
+  `keys_or_predicate` may be a list of keys or a two-arity predicate function.
+  A matched entry is replaced with `opts[:replacement]`, which defaults to
+  `"[REDACTED]"`. Unmatched entries are recursively redacted, and lists are
+  traversed while non-container list elements are left unchanged.
+
+  ## Options
+
+    * `:replacement` - value used for matched entries; defaults to
+      `"[REDACTED]"`
+    * `:recurse_into_matched` - when `true`, matched map or list values are
+      recursed into instead of replaced wholesale; matched scalar values are
+      still replaced. Defaults to `false`
+    * `:structs` - same meaning as in `reject/3`
+
+  ## Examples
+
+      iex> NestedFilter.redact(%{user: %{name: "Ana", password: "hunter2"}, token: "abc"}, [:password, :token])
+      %{user: %{name: "Ana", password: "[REDACTED]"}, token: "[REDACTED]"}
+
+      iex> NestedFilter.redact(%{card: "4111111111111111"}, fn _k, v -> is_binary(v) and String.match?(v, ~r/^\\d{13,16}$/) end)
+      %{card: "[REDACTED]"}
+
+      iex> NestedFilter.redact(%{token: %{value: "abc", meta: %{token: "nested-secret"}}}, [:token], recurse_into_matched: true)
+      %{token: %{value: "abc", meta: %{token: "[REDACTED]"}}}
+
+  """
+  @spec redact(map | list | any, [key] | predicate, keyword) :: map | list | any
+  def redact(data, keys_or_predicate, opts \\ []) do
+    predicate = to_redact_predicate(keys_or_predicate)
+    redact_value(data, predicate, opts)
+  end
+
+  @doc """
   Recursively keeps map entries for which `predicate` returns a truthy value.
 
   A matched entry is kept whole: its value is not recursed into, so the
@@ -228,6 +263,56 @@ defmodule NestedFilter do
   end
 
   def filter(elem, _predicate, _opts), do: elem
+
+  defp to_redact_predicate(keys) when is_list(keys) do
+    fn key, _val -> key in keys end
+  end
+
+  defp to_redact_predicate(predicate) when is_function(predicate, 2), do: predicate
+
+  defp to_redact_predicate(keys_or_predicate) do
+    raise ArgumentError,
+          "expected keys_or_predicate to be a list of keys or a two-arity function, got: #{inspect(keys_or_predicate)}"
+  end
+
+  defp redact_value(%_{} = struct, predicate, opts) do
+    case Keyword.get(opts, :structs, :leaf) do
+      :leaf -> struct
+      :convert -> struct |> Map.from_struct() |> redact_value(predicate, opts)
+      :error -> struct_error!(struct)
+    end
+  end
+
+  defp redact_value(map, predicate, opts) when is_map(map) do
+    Map.new(map, fn {key, val} -> {key, redact_entry(key, val, predicate, opts)} end)
+  end
+
+  defp redact_value(list, predicate, opts) when is_list(list) do
+    Enum.map(list, &redact_value(&1, predicate, opts))
+  end
+
+  defp redact_value(elem, _predicate, _opts), do: elem
+
+  defp redact_entry(key, val, predicate, opts) do
+    if predicate.(key, val) do
+      redact_matched_value(val, predicate, opts)
+    else
+      redact_value(val, predicate, opts)
+    end
+  end
+
+  defp redact_matched_value(val, predicate, opts) do
+    if Keyword.get(opts, :recurse_into_matched, false) and redact_container?(val, opts) do
+      redact_value(val, predicate, opts)
+    else
+      Keyword.get(opts, :replacement, "[REDACTED]")
+    end
+  end
+
+  defp redact_container?(%_{}, opts), do: Keyword.get(opts, :structs, :leaf) == :convert
+  defp redact_container?(map, _opts) when is_map(map), do: true
+  defp redact_container?(list, _opts) when is_list(list), do: true
+  defp redact_container?(_elem, _opts), do: false
 
   defp strip_list_nils(%_{} = struct), do: struct
 
