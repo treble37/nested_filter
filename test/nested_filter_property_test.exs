@@ -48,6 +48,33 @@ defmodule NestedFilterPropertyTest do
     end
   end
 
+  property "compact/2 output contains no nil map values at any depth" do
+    check all(term <- nested_gen(scalar_gen())) do
+      term |> NestedFilter.compact() |> refute_nil_map_values()
+    end
+  end
+
+  property "compact/2 with prune_empty: true contains no empty container values" do
+    check all(term <- nested_gen(scalar_gen())) do
+      term |> NestedFilter.compact() |> refute_empty_container_values()
+    end
+  end
+
+  property "redact/3 replaces every value whose key is in the keys list" do
+    check all(term <- nested_gen(scalar_gen()), keys <- targets_gen(term, :key)) do
+      term |> NestedFilter.redact(keys) |> assert_keys_redacted(keys)
+    end
+  end
+
+  property "compact/2 and redact/3 are idempotent" do
+    check all(term <- nested_gen(scalar_gen()), keys <- targets_gen(term, :key)) do
+      compacted = NestedFilter.compact(term)
+      assert NestedFilter.compact(compacted) == compacted
+      redacted = NestedFilter.redact(term, keys)
+      assert NestedFilter.redact(redacted, keys) == redacted
+    end
+  end
+
   # --- Generators -----------------------------------------------------------
 
   defp key_gen do
@@ -171,4 +198,51 @@ defmodule NestedFilterPropertyTest do
 
   defp all_structs(list) when is_list(list), do: Enum.flat_map(list, &all_structs/1)
   defp all_structs(_scalar), do: []
+
+  defp refute_nil_map_values(%_{}), do: :ok
+
+  defp refute_nil_map_values(map) when is_map(map) do
+    Enum.each(map, fn {_key, value} ->
+      refute is_nil(value)
+      refute_nil_map_values(value)
+    end)
+  end
+
+  defp refute_nil_map_values(list) when is_list(list),
+    do: Enum.each(list, &refute_nil_map_values/1)
+
+  defp refute_nil_map_values(_scalar), do: :ok
+
+  defp refute_empty_container_values(%_{}), do: :ok
+
+  defp refute_empty_container_values(map) when is_map(map) do
+    Enum.each(map, fn {_key, value} ->
+      refute value == %{}
+      refute value == []
+      refute_empty_container_values(value)
+    end)
+  end
+
+  defp refute_empty_container_values(list) when is_list(list) do
+    Enum.each(list, fn value ->
+      refute value == %{}
+      refute value == []
+      refute_empty_container_values(value)
+    end)
+  end
+
+  defp refute_empty_container_values(_scalar), do: :ok
+
+  defp assert_keys_redacted(%_{} = struct, _keys), do: struct
+
+  defp assert_keys_redacted(map, keys) when is_map(map) do
+    Enum.each(map, fn {key, value} ->
+      if key in keys, do: assert(value == "[REDACTED]"), else: assert_keys_redacted(value, keys)
+    end)
+  end
+
+  defp assert_keys_redacted(list, keys) when is_list(list),
+    do: Enum.each(list, &assert_keys_redacted(&1, keys))
+
+  defp assert_keys_redacted(scalar, _keys), do: scalar
 end
