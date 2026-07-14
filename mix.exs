@@ -20,6 +20,17 @@ defmodule NestedFilter.Mixfile do
     ]
   end
 
+  def cli do
+    [
+      preferred_envs: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.github": :test,
+        "coveralls.html": :test
+      ]
+    ]
+  end
+
   defp package do
     [
       files: ["lib", "mix.exs", "README*", "LICENSE*"],

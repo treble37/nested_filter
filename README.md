@@ -1,6 +1,7 @@
 # NestedFilter
 
 ![Build](https://github.com/treble37/nested_filter/actions/workflows/nested_filter_ci.yml/badge.svg?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/treble37/nested_filter/badge.svg?branch=main)](https://coveralls.io/github/treble37/nested_filter?branch=main)
 [![Hex.pm](https://img.shields.io/hexpm/v/nested_filter.svg)](https://hex.pm/packages/nested_filter)
 [![Hex.pm Downloads](https://img.shields.io/hexpm/dt/nested_filter.svg)](https://hex.pm/packages/nested_filter)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/treble37/nested_filter/main/LICENSE)
