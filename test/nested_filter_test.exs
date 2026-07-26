@@ -438,7 +438,83 @@ defmodule NestedFilterTest do
     end
   end
 
+  describe "filter/3 :empties option" do
+    test "empties: :keep keeps a map that filters to empty (vs default pruning it)" do
+      nested_map = %{a: %{x: 1}, b: %{y: 2}}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :x end, empties: :keep) ==
+               %{a: %{x: 1}, b: %{}}
+    end
+
+    test "empties: :keep keeps a list that filters to empty" do
+      nested_map = %{a: %{x: 1}, nums: [1, 2, 3]}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :x end, empties: :keep) ==
+               %{a: %{x: 1}, nums: []}
+    end
+
+    test "empties: :keep keeps an emptied map element in a list, still dropping scalar elements" do
+      nested_map = %{items: [%{x: 1}, %{y: 2}, "raw", 3]}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :x end, empties: :keep) ==
+               %{items: [%{x: 1}, %{}]}
+    end
+
+    test "empties: :keep preserves the whole skeleton with no upward propagation" do
+      nested_map = %{a: %{b: %{c: 1}}}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :z end, empties: :keep) ==
+               %{a: %{b: %{}}}
+    end
+
+    test "empties: :keep still prunes unmatched scalar map entries (leaves are not kept)" do
+      nested_map = %{keep: %{x: 1}, drop: 2}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :x end, empties: :keep) ==
+               %{keep: %{x: 1}}
+    end
+
+    test "structs: :leaf with empties: :keep still prunes an unmatched struct leaf" do
+      profile = %Profile{name: "ada", email: nil}
+      nested_map = %{a: %{x: 1}, user: profile}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :x end, empties: :keep) ==
+               %{a: %{x: 1}}
+    end
+
+    test "structs: :convert with empties: :keep keeps a struct that converts and empties" do
+      nested_map = %{user: %Profile{name: "ada", email: nil}}
+
+      assert NestedFilter.filter(nested_map, fn k, _v -> k == :nope end,
+               structs: :convert,
+               empties: :keep
+             ) == %{user: %{}}
+    end
+
+    test "empties: :prune and option omitted are byte-for-byte identical (regression)" do
+      nested_map = %{a: %{x: 1}, b: %{y: 2}, c: [%{x: 3, y: 4}, %{y: 5}], d: 6}
+      predicate = fn k, _v -> k in [:x] end
+
+      expected = %{a: %{x: 1}, c: [%{x: 3}]}
+      assert NestedFilter.filter(nested_map, predicate) == expected
+      assert NestedFilter.filter(nested_map, predicate, empties: :prune) == expected
+    end
+
+    test "invalid :empties value raises ArgumentError naming the value" do
+      assert_raise ArgumentError, ~r/:empties.*:bogus/, fn ->
+        NestedFilter.filter(%{a: %{x: 1}, b: %{y: 2}}, fn k, _v -> k == :x end, empties: :bogus)
+      end
+    end
+  end
+
   describe "take_by_key/3 (structure-preserving)" do
+    test "forwards the :empties option" do
+      nested_map = %{a: %{x: 1}, b: %{y: 2}}
+
+      assert NestedFilter.take_by_key(nested_map, [:x], empties: :keep) ==
+               %{a: %{x: 1}, b: %{}}
+    end
+
     test "no flattening, no data loss on key collisions across branches" do
       nested_map = %{a: %{x: 1}, b: %{x: 2}}
       assert NestedFilter.take_by_key(nested_map, [:x]) == %{a: %{x: 1}, b: %{x: 2}}

@@ -220,9 +220,15 @@ defmodule NestedFilter do
 
   ## Options
 
-  Accepts the same `:structs` option as `reject/3`. With the default
-  `:leaf`, a struct is an opaque value: kept whole when its entry is
-  matched, pruned otherwise.
+    * `:structs` — same meaning as in `reject/3`. With the default `:leaf`, a
+      struct is an opaque value: kept whole when its entry is matched, pruned
+      otherwise.
+    * `:empties` — what to do with a container that filters down to no
+      surviving content:
+      * `:prune` (default) — the empty container is removed entirely
+      * `:keep` — the empty container is kept as `%{}`/`[]`, preserving the
+        input's container skeleton. Non-container leaves that don't match are
+        still pruned; only genuinely emptied containers are kept.
 
   ## Examples
 
@@ -234,6 +240,12 @@ defmodule NestedFilter do
 
       iex> NestedFilter.filter(%{user: %{name: "ada"}, meta: %{z: 1}}, fn k, _v -> k == :user end)
       %{user: %{name: "ada"}}
+
+      iex> NestedFilter.filter(%{a: %{x: 1}, b: %{y: 2}}, fn k, _v -> k == :x end, empties: :keep)
+      %{a: %{x: 1}, b: %{}}
+
+      iex> NestedFilter.filter(%{a: %{b: %{c: 1}}}, fn k, _v -> k == :z end, empties: :keep)
+      %{a: %{b: %{}}}
 
   """
   @spec filter(map | list | any, predicate, keyword) :: map | list | any
@@ -380,19 +392,44 @@ defmodule NestedFilter do
 
   defp filter_value(map, predicate, opts) when is_map(map) do
     case filter(map, predicate, opts) do
-      filtered when map_size(filtered) == 0 -> :prune
+      filtered when map_size(filtered) == 0 -> keep_or_prune(filtered, opts)
       filtered -> {:keep, filtered}
     end
   end
 
   defp filter_value(list, predicate, opts) when is_list(list) do
     case filter(list, predicate, opts) do
-      [] -> :prune
+      [] -> keep_or_prune([], opts)
       filtered -> {:keep, filtered}
     end
   end
 
   defp filter_value(_elem, _predicate, _opts), do: :prune
+
+  # An empty container (a container filtered down to no surviving content) is
+  # kept as-is under `empties: :keep`, or pruned under `:prune` (default).
+  # Non-container leaves never reach here — they are pruned directly above.
+  defp keep_or_prune(empty, opts) do
+    case empties_mode(opts) do
+      :prune -> :prune
+      :keep -> {:keep, empty}
+    end
+  end
+
+  # Shared `:empties` normalizer (used by filter/3 and compact/2) so both
+  # emit the identical ArgumentError on a bad value.
+  defp empties_mode(opts) do
+    case Keyword.get(opts, :empties, :prune) do
+      :keep ->
+        :keep
+
+      :prune ->
+        :prune
+
+      other ->
+        raise ArgumentError, "expected :empties to be :keep or :prune, got: #{inspect(other)}"
+    end
+  end
 
   defp struct_error!(struct) do
     raise ArgumentError,
@@ -438,9 +475,10 @@ defmodule NestedFilter do
   preserving the structure they were found in.
 
   Sugar for `filter(map, fn key, _val -> key in keys_to_select end, opts)` —
-  see `filter/3` for the traversal semantics and options. Matches stay at
-  the path where they were found; sibling branches are never merged, and
-  branches without a match are pruned.
+  see `filter/3` for the traversal semantics and options (including
+  `:empties` and `:structs`). Matches stay at the path where they were found;
+  sibling branches are never merged, and branches without a match are pruned
+  unless `empties: :keep` is given.
 
   > #### Changed in 2.0 {: .warning}
   >
