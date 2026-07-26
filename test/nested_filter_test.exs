@@ -245,6 +245,52 @@ defmodule NestedFilterTest do
     end
   end
 
+  describe "compact/2 :empties option (prune_empty reconciliation)" do
+    test "empties: :keep keeps containers left empty by nil removal" do
+      assert NestedFilter.compact(%{a: 1, b: %{c: nil}}, empties: :keep) == %{a: 1, b: %{}}
+    end
+
+    test "empties: is 1:1 with the deprecated prune_empty alias" do
+      shapes = [
+        %{a: 1, b: nil, c: %{d: nil}, e: [%{f: nil}]},
+        %{a: [%{b: %{c: nil}}], g: %{h: %{i: nil}, j: [nil]}},
+        %{a: 1, b: %{m: nil, n: 2}}
+      ]
+
+      for m <- shapes do
+        assert NestedFilter.compact(m, empties: :keep) ==
+                 NestedFilter.compact(m, prune_empty: false)
+
+        assert NestedFilter.compact(m, empties: :prune) ==
+                 NestedFilter.compact(m, prune_empty: true)
+      end
+    end
+
+    test "empties: :prune default matches the current prune_empty: true default" do
+      m = %{a: 1, b: nil, c: %{d: nil}, e: %{f: 1, g: nil}}
+      assert NestedFilter.compact(m, empties: :prune) == NestedFilter.compact(m)
+    end
+
+    test "passing both :empties and :prune_empty raises ArgumentError" do
+      assert_raise ArgumentError, ~r/:empties.*:prune_empty|:prune_empty.*:empties/, fn ->
+        NestedFilter.compact(%{a: %{b: nil}}, empties: :keep, prune_empty: false)
+      end
+    end
+
+    test "invalid :empties value raises ArgumentError with the same message as filter/3" do
+      assert_raise ArgumentError, ~r/:empties.*:bogus/, fn ->
+        NestedFilter.compact(%{a: %{b: nil}}, empties: :bogus)
+      end
+    end
+
+    test "empties: combines with strip_list_nils and structs" do
+      m = %{a: [nil], b: %{c: nil}, user: %Profile{name: "ada", email: nil}}
+
+      assert NestedFilter.compact(m, empties: :keep, strip_list_nils: true, structs: :convert) ==
+               %{a: [], b: %{}, user: %{name: "ada"}}
+    end
+  end
+
   describe "redact/3" do
     test "replaces values for matching keys at any depth" do
       nested_map = %{user: %{name: "Ana", password: "hunter2"}, token: "abc"}

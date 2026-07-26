@@ -138,16 +138,28 @@ defmodule NestedFilter do
 
   ## Options
 
-    * `:prune_empty` - when `true` (default), removes map entries and list
-      elements whose cleaned value is an empty map or list
+    * `:empties` - what to do with containers left empty by nil removal,
+      matching `filter/3`:
+      * `:prune` (default) - removes map entries and list elements whose
+        cleaned value is an empty map or list
+      * `:keep` - leaves those empty containers in place
     * `:strip_list_nils` - when `true`, also removes `nil` elements from lists;
       defaults to `false`
     * `:structs` - same meaning as in `reject/3`
+
+  > #### Deprecated: `:prune_empty` {: .warning}
+  >
+  > The boolean `prune_empty: true | false` is a deprecated alias for
+  > `empties: :prune | :keep` and will be removed in 3.0. Passing both
+  > `:empties` and `:prune_empty` raises `ArgumentError`.
 
   ## Examples
 
       iex> NestedFilter.compact(%{a: 1, b: nil, c: %{d: nil}, e: %{f: 1, g: nil}})
       %{a: 1, e: %{f: 1}}
+
+      iex> NestedFilter.compact(%{a: 1, b: %{c: nil}}, empties: :keep)
+      %{a: 1, b: %{}}
 
       iex> NestedFilter.compact(%{a: [1, nil, 2]}, strip_list_nils: true)
       %{a: [1, 2]}
@@ -155,6 +167,8 @@ defmodule NestedFilter do
   """
   @spec compact(map | list | any, keyword) :: map | list | any
   def compact(data, opts \\ []) do
+    prune_empty? = compact_prune_empty?(opts)
+
     compacted = reject(data, fn _key, val -> is_nil(val) end, opts)
 
     compacted =
@@ -164,10 +178,30 @@ defmodule NestedFilter do
         compacted
       end
 
-    if Keyword.get(opts, :prune_empty, true) do
+    if prune_empty? do
       prune_empty_containers(compacted)
     else
       compacted
+    end
+  end
+
+  # Resolves whether compact/2 should prune empty containers from the canonical
+  # `:empties` option and the deprecated `:prune_empty` alias. The two are
+  # mutually exclusive; `empties: :prune` (default) prunes, `:keep` does not.
+  defp compact_prune_empty?(opts) do
+    has_empties? = Keyword.has_key?(opts, :empties)
+    has_prune_empty? = Keyword.has_key?(opts, :prune_empty)
+
+    cond do
+      has_empties? and has_prune_empty? ->
+        raise ArgumentError,
+              "compact/2 accepts either :empties or the deprecated :prune_empty, not both"
+
+      has_empties? ->
+        empties_mode(opts) == :prune
+
+      true ->
+        Keyword.get(opts, :prune_empty, true)
     end
   end
 
