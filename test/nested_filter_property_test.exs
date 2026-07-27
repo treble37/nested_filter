@@ -25,6 +25,25 @@ defmodule NestedFilterPropertyTest do
     end
   end
 
+  property "filter/3 with empties: :keep preserves the container skeleton and invents no leaves" do
+    check all({term, predicate} <- term_with_predicate(scalar_gen())) do
+      output = NestedFilter.filter(term, predicate, empties: :keep)
+
+      # Under :keep no container (map/list) is ever dropped or invented — only
+      # non-matching scalar leaves are pruned — so the container multiset is
+      # exactly preserved at every path.
+      assert container_paths(output) == container_paths(term)
+
+      # And it still invents nothing: every output leaf exists in the input.
+      output_leaves = output |> leaf_paths() |> Enum.frequencies()
+      input_leaves = term |> leaf_paths() |> Enum.frequencies()
+
+      Enum.each(output_leaves, fn {leaf_at_path, count} ->
+        assert Map.get(input_leaves, leaf_at_path, 0) >= count
+      end)
+    end
+  end
+
   property "reject/3 and filter/3 are idempotent" do
     check all({term, predicate} <- term_with_predicate(scalar_gen())) do
       rejected = NestedFilter.reject(term, predicate)
@@ -171,6 +190,27 @@ defmodule NestedFilterPropertyTest do
   end
 
   defp leaf_paths(scalar, path), do: [{Enum.reverse(path), scalar}]
+
+  # Multiset of paths to every container node (map/list), index-agnostic like
+  # leaf_paths. Structs are opaque leaves, not containers. Used to assert the
+  # container skeleton is preserved under filter/3 empties: :keep.
+  defp container_paths(term), do: term |> do_container_paths([]) |> Enum.frequencies()
+
+  defp do_container_paths(%_{}, _path), do: []
+
+  defp do_container_paths(map, path) when is_map(map) do
+    children =
+      Enum.flat_map(map, fn {key, val} -> do_container_paths(val, [{:key, key} | path]) end)
+
+    [{Enum.reverse(path), :map} | children]
+  end
+
+  defp do_container_paths(list, path) when is_list(list) do
+    children = Enum.flat_map(list, &do_container_paths(&1, [:list | path]))
+    [{Enum.reverse(path), :list} | children]
+  end
+
+  defp do_container_paths(_scalar, _path), do: []
 
   defp all_keys(%_{}), do: []
 
