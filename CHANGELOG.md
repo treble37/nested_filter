@@ -6,6 +6,21 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 2.2.0 - 7/26/26 Sunday
+
+-   [ENHANCEMENT] `filter/3` and `take_by_key/3` accept an `empties:` option.
+    `:prune` (default) keeps the existing behavior of dropping branches with no
+    surviving content; `:keep` preserves the container skeleton, leaving any
+    container that filters down to empty as `%{}`/`[]` while still pruning
+    unmatched scalar and struct leaves.
+-   [ENHANCEMENT] `compact/2` accepts the same `empties: :keep | :prune` option
+    as the canonical spelling for its empty-container handling.
+-   [DEPRECATION] `compact/2`'s boolean `prune_empty` is now a deprecated alias
+    for `empties:` (`prune_empty: false` == `empties: :keep`; `prune_empty:
+    true` == `empties: :prune`) and will be removed in 3.0. Passing both
+    `:empties` and `:prune_empty` raises `ArgumentError`. Existing `prune_empty`
+    calls are otherwise unchanged.
+
 ## 2.1.0 - 7/10/26 Friday
 
 -   [ENHANCEMENT] Add `compact/2` to remove `nil` map values recursively.

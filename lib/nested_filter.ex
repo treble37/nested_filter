@@ -53,6 +53,16 @@ defmodule NestedFilter do
       iex> NestedFilter.take_by_key(order, [:id])
       %{buyer: %{id: 1}, items: [%{id: 10}, %{id: 11}]}
 
+  ### Take a field everywhere, keeping the shape
+
+  Pass `empties: :keep` so branches without a match stay present as empty
+  containers instead of being pruned — handy when downstream code expects a
+  stable shape:
+
+      iex> records = %{active: %{id: 1, name: "Ada"}, pending: %{name: "Bo"}}
+      iex> NestedFilter.take_by_key(records, [:id], empties: :keep)
+      %{active: %{id: 1}, pending: %{}}
+
   ### Sanitize logs
 
   Redact by pattern when the exact key names aren't known up front:
